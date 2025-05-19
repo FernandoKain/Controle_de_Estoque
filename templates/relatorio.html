@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Relatório de Estoque</title>
+</head>
+<body>
+  <h1>Relatório de Estoque</h1>
+
+  <h2>Resumo</h2>
+  <p>Total de produtos: {{ total_produtos }}</p>
+  <p>Valor total em estoque: R$ {{ valor_total_estoque }}</p>
+
+  <h2>Histórico de Movimentações</h2>
+  <table border="1">
+    <tr>
+      <th>Data</th>
+      <th>Produto</th>
+      <th>Tipo</th>
+      <th>Quantidade</th>
+    </tr>
+    {% for m in movimentacoes %}
+    <tr>
+      <td>{{ m.data.strftime('%d/%m/%Y %H:%M') }}</td>
+      <td>{{ m.produto.nome }}</td>
+      <td>{{ m.tipo }}</td>
+      <td>{{ m.quantidade }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+
+  <a href="/">Voltar ao Início</a>
+</body>
+</html>

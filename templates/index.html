@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Controle de Estoque</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    .alerta-estoque {
+      background-color: #ffcccc;
+    }
+  </style>
+</head>
+<body>
+  <h1>Controle de Estoque</h1>
+  <p><a href="/movimentar">Registrar entrada/saída de produto</a></p>
+  <p><a href="/relatorio">Ver relatório de estoque</a></p>
+
+  <form action="/add" method="POST">
+    <input type="text" name="nome" placeholder="Nome do produto" required>
+    <input type="text" name="categoria" placeholder="Categoria">
+    <input type="number" name="quantidade" placeholder="Quantidade" required>
+    <input type="number" name="preco" placeholder="Preço" step="0.01" required>
+    <input type="number" name="estoque_minimo" placeholder="Estoque mínimo" required>
+    <button type="submit">Adicionar</button>
+  </form>
+
+  <h2>Produtos</h2>
+  <table>
+    <tr>
+      <th>ID</th>
+      <th>Nome</th>
+      <th>Categoria</th>
+      <th>Quantidade</th>
+      <th>Estoque Mínimo</th>
+      <th>Preço</th>
+      <th>Ações</th>
+    </tr>
+    {% for p in produtos %}
+    <tr {% if p.quantidade <= p.estoque_minimo %} class="alerta-estoque" {% endif %}>
+      <td>{{ p.id }}</td>
+      <td>{{ p.nome }}</td>
+      <td>{{ p.categoria }}</td>
+      <td>{{ p.quantidade }}</td>
+      <td>{{ p.estoque_minimo }}</td>
+      <td>R$ {{ "%.2f"|format(p.preco) }}</td>
+      <td>
+        <a href="/edit/{{ p.id }}">Editar</a> |
+        <a href="/delete/{{ p.id }}" onclick="return confirm('Tem certeza que deseja excluir este produto?');">Excluir</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</body>
+</html>

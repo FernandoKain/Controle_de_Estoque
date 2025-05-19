@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Movimentar Estoque</title>
+</head>
+<body>
+  <h1>Entrada/Saída de Estoque</h1>
+  <form action="/registrar_movimentacao" method="POST">
+    <label>Produto:</label>
+    <select name="produto_id" required>
+      {% for produto in produtos %}
+      <option value="{{ produto.id }}">{{ produto.nome }}</option>
+      {% endfor %}
+    </select>
+
+    <label>Tipo:</label>
+    <select name="tipo" required>
+      <option value="entrada">Entrada</option>
+      <option value="saida">Saída</option>
+    </select>
+
+    <label>Quantidade:</label>
+    <input type="number" name="quantidade" required>
+
+    <button type="submit">Registrar</button>
+  </form>
+
+  <a href="/">Voltar</a>
+</body>
+</html>
