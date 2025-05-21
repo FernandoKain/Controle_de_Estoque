@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block title %}Relatório Avançado{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">📊 Relatório Avançado</h2>
+
+<!-- MENSAGENS FLASH -->
+{% with mensagens = get_flashed_messages(with_categories=true) %}
+  {% if mensagens %}
+    {% for categoria, mensagem in mensagens %}
+      <div class="alert alert-{{ categoria }} alert-dismissible fade show" role="alert">
+        {{ mensagem }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<form method="get" class="row g-3 mb-4">
+  <div class="col-md-4">
+    <label for="categoria" class="form-label">Categoria</label>
+    <select class="form-select" name="categoria" id="categoria">
+      <option value="">Todas</option>
+      {% for categoria in categorias %}
+        <option value="{{ categoria.nome }}" {% if request.args.get('categoria') == categoria.nome %}selected{% endif %}>{{ categoria.nome }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="col-md-3">
+    <label for="data_inicio" class="form-label">Data Início</label>
+    <input type="date" class="form-control" name="data_inicio" value="{{ request.args.get('data_inicio', '') }}">
+  </div>
+
+  <div class="col-md-3">
+    <label for="data_fim" class="form-label">Data Fim</label>
+    <input type="date" class="form-control" name="data_fim" value="{{ request.args.get('data_fim', '') }}">
+  </div>
+
+  <div class="col-md-2 d-flex align-items-end">
+    <div class="form-check">
+      <input class="form-check-input" type="checkbox" name="estoque_baixo" value="1" {% if request.args.get('estoque_baixo') %}checked{% endif %}>
+      <label class="form-check-label">Estoque Baixo</label>
+    </div>
+  </div>
+
+  <div class="col-12">
+    <button type="submit" class="btn btn-primary">Filtrar</button>
+    <a href="{{ url_for('exportar_csv', categoria=request.args.get('categoria', ''), data_inicio=request.args.get('data_inicio', ''), data_fim=request.args.get('data_fim', ''), estoque_baixo=request.args.get('estoque_baixo', '')) }}" class="btn btn-success ms-2">Exportar CSV</a>
+    <a href="{{ url_for('exportar_pdf', categoria=request.args.get('categoria', ''), data_inicio=request.args.get('data_inicio', ''), data_fim=request.args.get('data_fim', ''), estoque_baixo=request.args.get('estoque_baixo', '')) }}" class="btn btn-danger ms-2">Exportar PDF</a>
+  </div>
+</form>
+
+<!-- Formulário de importação de CSV -->
+<form action="{{ url_for('importar_csv') }}" method="post" enctype="multipart/form-data" class="mb-4">
+  <div class="mb-3">
+    <label for="arquivo_csv" class="form-label">Importar CSV</label>
+    <input type="file" class="form-control" id="arquivo_csv" name="arquivo_csv" accept=".csv" required>
+  </div>
+  <button type="submit" class="btn btn-secondary">Importar</button>
+</form>
+
+
+{% if produtos %}
+  <table class="table table-bordered table-striped">
+    <thead class="table-dark">
+      <tr>
+        <th>ID</th>
+        <th>Nome</th>
+        <th>Categoria</th>
+        <th>Quantidade</th>
+        <th>Estoque Mínimo</th>
+        <th>Preço</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for produto in produtos.items %}
+        <tr {% if produto.quantidade <= produto.estoque_minimo %}class="alerta-estoque"{% endif %}>
+          <td>{{ produto.id }}</td>
+          <td>{{ produto.nome }}</td>
+          <td>{{ produto.categoria.nome }}</td>
+          <td>{{ produto.quantidade }}</td>
+          <td>{{ produto.estoque_minimo }}</td>
+          <td>R$ {{ "%.2f"|format(produto.preco) }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <div class="alert alert-warning">Nenhum produto encontrado com os filtros selecionados.</div>
+{% endif %}
+{% endblock %}

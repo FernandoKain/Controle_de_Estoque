@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block title %}Edição de Produto{% endblock %}
+
+{% block content %}
+  <h1>Editar Produto</h1>
+  <form action="/update/{{ produto.id }}" method="POST">
+    <input type="text" name="nome" value="{{ produto.nome }}" required>
+    <input type="text" name="categoria" value="{{ produto.categoria }}">
+    <input type="number" name="quantidade" value="{{ produto.quantidade }}" required>
+    <input type="number" name="preco" value="{{ produto.preco }}" step="0.01" required>
+    <button type="submit">Salvar</button>
+    <a href="/">Cancelar</a>
+  </form>
+
+{% endblock %}

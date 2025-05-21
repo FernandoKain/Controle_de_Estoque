@@ -1,18 +1,39 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-  <meta charset="UTF-8">
-  <title>Editar Produto</title>
-</head>
-<body>
-  <h1>Editar Produto</h1>
-  <form action="/update/{{ produto.id }}" method="POST">
-    <input type="text" name="nome" value="{{ produto.nome }}" required>
-    <input type="text" name="categoria" value="{{ produto.categoria }}">
-    <input type="number" name="quantidade" value="{{ produto.quantidade }}" required>
-    <input type="number" name="preco" value="{{ produto.preco }}" step="0.01" required>
-    <button type="submit">Salvar</button>
-    <a href="/">Cancelar</a>
+{% extends 'base.html' %}
+
+{% block title %}Edição de Produto{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h1 class="mb-4">✏️ Editar Produto</h1>
+  <form action="{{ url_for('update', id=produto.id) }}" method="POST" class="row g-3">
+    <div class="col-md-6">
+      <label for="nome" class="form-label">Nome</label>
+      <input type="text" name="nome" id="nome" class="form-control" value="{{ produto.nome }}" required>
+    </div>
+    <div class="col-md-6">
+      <label for="categoria_id" class="form-label">Categoria</label>
+      <select name="categoria_id" id="categoria_id" class="form-select" required>
+        {% for cat in categorias %}
+          <option value="{{ cat.id }}" {% if produto.categoria_id == cat.id %}selected{% endif %}>{{ cat.nome }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-4">
+      <label for="quantidade" class="form-label">Quantidade</label>
+      <input type="number" name="quantidade" id="quantidade" class="form-control" value="{{ produto.quantidade }}" required min="0">
+    </div>
+    <div class="col-md-4">
+      <label for="preco" class="form-label">Preço</label>
+      <input type="number" name="preco" id="preco" class="form-control" step="0.01" value="{{ produto.preco }}" required min="0">
+    </div>
+    <div class="col-md-4">
+      <label for="estoque_minimo" class="form-label">Estoque Mínimo</label>
+      <input type="number" name="estoque_minimo" id="estoque_minimo" class="form-control" value="{{ produto.estoque_minimo }}" required min="0">
+    </div>
+    <div class="col-12 d-flex justify-content-between mt-3">
+      <button type="submit" class="btn btn-success">💾 Salvar</button>
+      <a href="{{ url_for('index') }}" class="btn btn-secondary">Cancelar</a>
+    </div>
   </form>
-</body>
-</html>
+</div>
+{% endblock %}
