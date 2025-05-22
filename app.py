@@ -166,7 +166,8 @@ def adicionar():
 @login_required
 def edit(id):
     produto = Produto.query.get_or_404(id)
-    return render_template('edit.html', produto=produto)
+    categorias = Categoria.query.all()
+    return render_template('edit.html', produto=produto, categorias=categorias)
 
 @app.route('/update/<int:id>', methods=['POST'])
 @login_required
