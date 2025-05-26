@@ -17,6 +17,7 @@ class Usuario(db.Model, UserMixin):
     tipo = db.Column(db.String(20), nullable=False, default='usuario')
     
 
+
     @property
     def is_admin(self):
         return self.tipo == 'admin'
