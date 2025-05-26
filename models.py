@@ -15,6 +15,7 @@ class Usuario(db.Model, UserMixin):
     email = db.Column(db.String(100), unique=True, nullable=False)
     senha = db.Column(db.String(200), nullable=False)
     tipo = db.Column(db.String(20), nullable=False, default='usuario')
+    
 
     @property
     def is_admin(self):

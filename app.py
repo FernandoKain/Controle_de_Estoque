@@ -27,6 +27,9 @@ import pytest
 # Importa o db e os modelos do arquivo models.py
 from models import db, Usuario, Categoria, Produto, Setor, Movimentacao
 
+# Importa o unicodedata para normalização de strings
+import unicodedata
+
 # =======================================================
 # Configuração da aplicação
 # =======================================================
@@ -105,21 +108,48 @@ def lista_compras():
 
 
 
+# ==================================================
+# Função para normalizar texto (remover acentos e converter para minúsculas) para ajudar na rota de adicionar produtos
+import unicodedata
+def normalizar_texto(texto):
+    """Remove acentos e converte para minúsculas."""
+    texto = texto.strip().lower()
+    texto = unicodedata.normalize('NFKD', texto)
+    texto = ''.join([c for c in texto if not unicodedata.combining(c)])
+    return texto
+
 @app.route('/adicionar', methods=['POST'])
 @login_required
 def adicionar():
-    nome = request.form['nome']
+    nome_original = request.form['nome'].strip()
+    nome_normalizado = normalizar_texto(nome_original)
     quantidade = int(request.form['quantidade'])
     preco = float(request.form['preco'])
     estoque_minimo = int(request.form['estoque_minimo'])
     categoria_id = int(request.form['categoria_id'])
 
-    produto = Produto(nome=nome, quantidade=quantidade, preco=preco, estoque_minimo=estoque_minimo, categoria_id=categoria_id)
+    # Verifica se já existe um produto com o mesmo nome (ignorando acentos e maiúsculas)
+    produtos = Produto.query.all()
+    for p in produtos:
+        if normalizar_texto(p.nome) == nome_normalizado:
+            flash('Produto já cadastrado. Utilize "Movimentar" caso queira dar entrada no produto.', 'danger')
+            return redirect(url_for('index'))
+
+    # Se não existir, adiciona o novo produto
+    produto = Produto(
+        nome=nome_original,
+        quantidade=quantidade,
+        preco=preco,
+        estoque_minimo=estoque_minimo,
+        categoria_id=categoria_id
+    )
 
     db.session.add(produto)
     db.session.commit()
     flash('Produto adicionado com sucesso.', 'success')
     return redirect(url_for('index'))
+
+
 
 @app.route('/edit/<int:id>')
 @login_required
