@@ -13,19 +13,12 @@
       <button type="submit" class="btn btn-success w-100">Adicionar</button>
     </div>
   </form>
+  
 
   <h5>Categorias Existentes</h5>
   <ul class="list-group">
     {% for cat in categorias %}
-      <li class="list-group-item d-flex justify-content-between align-items-center">
-        {{ cat.nome }}
-        <div class="btn-group">
-          <a href="{{ url_for('editar_categoria', id=cat.id) }}" class="btn btn-sm btn-primary">Editar</a>
-          <form method="POST" action="{{ url_for('excluir_categoria', id=cat.id) }}" onsubmit="return confirm('Tem certeza que deseja excluir esta categoria?')">
-            <button type="submit" class="btn btn-sm btn-danger">Excluir</button>
-          </form>
-        </div>
-      </li>
+      <li class="list-group-item">{{ cat.nome }}</li>
     {% endfor %}
   </ul>
 </div>

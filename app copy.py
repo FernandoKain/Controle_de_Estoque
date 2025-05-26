@@ -1,46 +1,95 @@
-# Flask e extensões principais
-from flask import Flask, render_template, render_template_string, request, redirect, url_for, session, flash, make_response, send_file
-
+from flask import Flask, render_template, request, redirect, url_for, session, flash, make_response, send_file, render_template_string
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager, login_user, login_required, logout_user, current_user, UserMixin
-
-# SQLAlchemy adicional
 from sqlalchemy import or_
-
-# Segurança
 from werkzeug.security import generate_password_hash, check_password_hash
-
-# Utilidades do sistema
+from flask_login import LoginManager, login_user, login_required, logout_user, current_user, UserMixin
 from datetime import datetime
-import os
 import csv
 import io
-
-# Exportação e geração de PDF
-from xhtml2pdf import pisa
-from io import BytesIO, StringIO
-
-
-# Testes (se estiver usando pytest de fato)
+import os
 import pytest
+from xhtml2pdf import pisa
+from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import or_
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import LoginManager, login_user, login_required, logout_user, current_user, UserMixin
+from datetime import datetime
+from flask import make_response
+from flask import send_file
+import csv
+from io import StringIO
+from io import BytesIO
+from xhtml2pdf import pisa
+import csv
+from io import TextIOWrapper
+from flask import request, redirect, url_for, flash
+from flask import render_template_string
+from datetime import datetime
+import os
+import io
 
-# Importa o db e os modelos do arquivo models.py
-from models import db, Usuario, Categoria, Produto, Setor, Movimentacao
 
-# =======================================================
-# Configuração da aplicação
-# =======================================================
+# ==================================================
+# Configuração inicial
+# ==================================================
 app = Flask(__name__)
-app.secret_key = '123'  # Troque por uma chave segura
+app.secret_key = '123'  # Troque isso por uma chave segura
 
-# Configuração do banco
 base_dir = os.path.abspath(os.path.dirname(__file__))
 os.makedirs(os.path.join(base_dir, 'database'), exist_ok=True)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(base_dir, 'database', 'estoque.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Inicializa o banco com a instância do app
-db.init_app(app)
+db = SQLAlchemy(app)
+
+# ==================================================
+# Modelos do Banco de Dados
+# ==================================================
+class Usuario(db.Model, UserMixin):
+    id = db.Column(db.Integer, primary_key=True)
+    nome = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(100), unique=True, nullable=False)
+    senha = db.Column(db.String(200), nullable=False)
+    tipo = db.Column(db.String(20), nullable=False, default='usuario')  # 'admin' ou 'usuario'
+    
+    @property
+    def is_admin(self):
+        return self.tipo=='admin'
+
+class Categoria(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    nome = db.Column(db.String(50), nullable=False, unique=True)
+    produtos = db.relationship('Produto', backref='categoria', lazy=True)
+
+class Produto(db.Model):
+    __tablename__ = 'produtos'
+    id = db.Column(db.Integer, primary_key=True)
+    nome = db.Column(db.String(100), nullable=False)
+    quantidade = db.Column(db.Integer, nullable=False)
+    preco = db.Column(db.Float, nullable=False)
+    estoque_minimo = db.Column(db.Integer, nullable=False, default=0)
+    categoria_id = db.Column(db.Integer, db.ForeignKey('categoria.id'), nullable=False)
+
+class Setor(db.Model):
+    __tablename__ = 'setores'
+    id = db.Column(db.Integer, primary_key=True)
+    nome = db.Column(db.String(100), nullable=False)
+
+    def __repr__(self):
+        return f'<Setor {self.nome}>'
+
+class Movimentacao(db.Model):
+    __tablename__ = 'movimentacoes'
+    id = db.Column(db.Integer, primary_key=True)
+    produto_id = db.Column(db.Integer, db.ForeignKey('produtos.id'))
+    tipo = db.Column(db.String(10))  # entrada ou saida
+    quantidade = db.Column(db.Integer)
+    data = db.Column(db.DateTime, default=datetime.utcnow)
+    setor_id = db.Column(db.Integer, db.ForeignKey('setores.id'), nullable=True)
+
+    produto = db.relationship('Produto', backref='movimentacoes')
+    setor = db.relationship('Setor', backref='movimentacoes')
 
 
 
@@ -105,7 +154,8 @@ def adicionar():
     estoque_minimo = int(request.form['estoque_minimo'])
     categoria_id = int(request.form['categoria_id'])
 
-    produto = Produto(nome=nome, quantidade=quantidade, preco=preco, estoque_minimo=estoque_minimo, categoria_id=categoria_id)
+    produto = Produto(nome=nome, quantidade=quantidade, preco=preco,
+                      estoque_minimo=estoque_minimo, categoria_id=categoria_id)
 
     db.session.add(produto)
     db.session.commit()
