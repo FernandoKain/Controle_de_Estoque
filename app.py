@@ -58,6 +58,7 @@ def load_user(user_id):
 # ==================================================
 # Rotas de autenticação
 # ==================================================
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -94,6 +95,14 @@ def index():
         produtos = Produto.query.all()
 
     return render_template('index.html', produtos=produtos, categorias=categorias)
+
+
+@app.route('/lista_compras')
+@login_required
+def lista_compras():
+    movimentacoes = Movimentacao.query.order_by(Movimentacao.data.desc()).all()
+    return render_template('lista_compras.html', movimentacoes=movimentacoes)
+
 
 
 @app.route('/adicionar', methods=['POST'])
