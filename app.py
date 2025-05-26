@@ -130,7 +130,7 @@ def update(id):
     produto.estoque_minimo = int(request.form['estoque_minimo'])  # você usa isso no form
     db.session.commit()
     flash('Produto atualizado com sucesso.', 'success')
-    return redirect(url_for('edit', id=id))
+    return redirect(url_for('index', id=id))
 
 
 @app.route('/categorias', methods=['GET', 'POST'])
