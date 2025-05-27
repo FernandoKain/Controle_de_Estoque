@@ -322,6 +322,54 @@ def excluir_categoria(id):
 
 
 # ==================================================
+# Editar e exlcuir setores
+# ==================================================
+@app.route('/editar_setor/<int:id>', methods=['GET', 'POST'])
+@login_required
+def editar_setor(id):
+    if not current_user.is_admin:
+        flash("Acesso restrito ao administrador.", "danger")
+        return redirect(url_for('cadastrar_setor'))
+
+    setor = Setor.query.get_or_404(id)
+
+    if request.method == 'POST':
+        novo_nome = request.form['nome']
+        if not novo_nome:
+            flash('O nome do setor é obrigatório.', 'danger')
+        else:
+            existente = Setor.query.filter_by(nome=novo_nome).first()
+            if existente and existente.id != setor.id:
+                flash('Já existe um setor com esse nome.', 'warning')
+            else:
+                setor.nome = novo_nome
+                db.session.commit()
+                flash('Setor atualizado com sucesso.', 'success')
+                return redirect(url_for('cadastrar_setor'))
+
+    return render_template('editar_setor.html', setor=setor)
+
+@app.route('/excluir_setor/<int:id>', methods=['POST'])
+@login_required
+def excluir_setor(id):
+    if not current_user.is_admin:
+        flash("Acesso restrito ao administrador.", "danger")
+        return redirect(url_for('cadastrar_setor'))
+
+    setor = Setor.query.get_or_404(id)
+
+    # Caso seja incluído o campo status no modelo Setor, descomente as linhas abaixo
+    #setor.status = 0  # Define o status como inativo
+    #db.session.commit()
+    
+    db.session.delete(setor)
+    db.session.commit()
+    flash('Setor excluído com sucesso.', 'success')
+
+    return redirect(url_for('cadastrar_setor'))
+
+
+# ==================================================
 # Relatórios e exportação e importação de CSV e PDF
 # ==================================================
 @app.route('/relatorio')
