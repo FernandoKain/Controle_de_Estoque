@@ -56,41 +56,6 @@
     </form>
   </div>
 
-  <!-- Tabela de produtos 
-  <div class="table-responsive">
-    <table class="table table-bordered table-striped table-hover align-middle">
-      <thead class="table-dark">
-        <tr>
-          <th>ID</th>
-          <th>Nome</th>
-          <th>Categoria</th>
-          <th>Quantidade</th>
-          <th>Preço</th>
-          <th>Ações</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for p in produtos %}
-        <tr class="{% if p.quantidade <= p.estoque_minimo %}table-danger{% endif %}">
-          <td>{{ p.id }}</td>
-          <td>{{ p.nome }}</td>
-          <td>{{ p.categoria.nome }}</td>
-          <td>{{ p.quantidade }}</td>
-          <td>R$ {{ "%.2f"|format(p.preco) }}</td>
-          <td>
-            <a href="{{ url_for('edit', id=p.id) }}" class="btn btn-sm btn-primary">Editar</a>
-            <a href="{{ url_for('delete', id=p.id) }}" class="btn btn-sm btn-danger"
-               onclick="return confirm('Deseja mesmo excluir este produto?');">Excluir</a>
-          </td>
-        </tr>
-        {% else %}
-        <tr>
-          <td colspan="6" class="text-center">Nenhum produto encontrado.</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-  -->
+
 </div>
 {% endblock %}
