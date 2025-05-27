@@ -30,6 +30,10 @@ from models import db, Usuario, Categoria, Produto, Setor, Movimentacao
 # Importa o unicodedata para normalização de strings
 import unicodedata
 
+# Importa o módulo de IO para manipulação de arquivos
+from io import TextIOWrapper
+
+
 # =======================================================
 # Configuração da aplicação
 # =======================================================
