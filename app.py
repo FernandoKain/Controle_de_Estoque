@@ -353,9 +353,9 @@ def editar_setor(id):
 
     return render_template('editar_setor.html', setor=setor)
 
-@app.route('/excluir_setor/<int:id>', methods=['POST'])
+@app.route('/desabilitar_setor/<int:id>', methods=['POST'])
 @login_required
-def excluir_setor(id):
+def desabilitar_setor(id):
     if not current_user.is_admin:
         flash("Acesso restrito ao administrador.", "danger")
         return redirect(url_for('cadastrar_setor'))
@@ -363,12 +363,10 @@ def excluir_setor(id):
     setor = Setor.query.get_or_404(id)
 
     # Caso seja incluído o campo status no modelo Setor, descomente as linhas abaixo
-    #setor.status = 0  # Define o status como inativo
+    #setor.status = False  # Define o status como inativo
     #db.session.commit()
     
-    db.session.delete(setor)
-    db.session.commit()
-    flash('Setor excluído com sucesso.', 'success')
+    #flash('Setor desabilitado com sucesso.', 'success')
 
     return redirect(url_for('cadastrar_setor'))
 
@@ -563,14 +561,21 @@ def importar_csv():
                 db.session.add(categoria)
                 db.session.commit()
 
-            produto = Produto(
-                nome=nome,
-                quantidade=quantidade,
-                preco=preco,
-                estoque_minimo=estoque_minimo,
-                categoria_id=categoria.id
-            )
-            db.session.add(produto)
+            # Verifica se já existe produto com mesmo nome E mesmo preço
+            produto_existente = Produto.query.filter_by(nome=nome, preco=preco).first()
+            if produto_existente:
+                # Atualiza o produto existente
+                produto_existente.quantidade += quantidade
+            else:
+                # Se não existe, cria novo produto
+                produto = Produto(
+                    nome=nome,
+                    quantidade=quantidade,
+                    preco=preco,
+                    estoque_minimo=estoque_minimo,
+                    categoria_id=categoria.id
+                )
+                db.session.add(produto)
 
         db.session.commit()
         flash('Produtos importados com sucesso!', 'success')
@@ -579,6 +584,94 @@ def importar_csv():
 
     return redirect(url_for('relatorio_avancado'))
 
+@app.route('/exportar_csv_movimentacoes')
+@login_required
+def exportar_csv_movimentacoes():
+    
+    # Se for filtrar, colocar os requisitos aqui
+    #
+
+    query = Movimentacao.query
+    movimentacoes = query.all()
+
+    # Geração do CSV
+    si = StringIO()
+    writer = csv.writer(si)
+    # Cabeçalho corrigido
+    writer.writerow(['data', 'produto', 'tipo', 'qtd', 'setor'])
+
+    for m in movimentacoes:
+        writer.writerow([
+            m.data.strftime('%Y-%m-%d %H:%M:%S'),
+            m.produto.nome if m.produto else '',
+            m.tipo,
+            m.quantidade,
+            m.setor.nome if m.setor else ''
+        ])
+
+    output = make_response(si.getvalue())
+    output.headers["Content-Disposition"] = "attachment; filename=relatorio_movimentacao.csv"
+    output.headers["Content-type"] = "text/csv; charset=utf-8"
+    return output
+
+@app.route('/importar_csv_movimentacoes', methods=['POST'])
+@login_required
+def importar_csv_movimentacoes():
+
+    if 'arquivo_csv' not in request.files:
+        flash('Nenhum arquivo enviado.', 'danger')
+        return redirect(url_for('relatorio_avancado'))
+
+    arquivo = request.files['arquivo_csv']
+
+    if not arquivo.filename.endswith('.csv'):
+        flash('Formato de arquivo inválido. Envie um arquivo .csv', 'danger')
+        return redirect(url_for('index'))
+
+    print("Importando movimentações... Continuar implementação")
+    #try:
+        #stream = TextIOWrapper(arquivo, encoding='utf-8')
+        #reader = csv.DictReader(stream)
+
+        #for linha in reader:
+            #nome = linha['nome']
+            #quantidade = int(linha['quantidade'])
+            #preco = float(linha['preco'])
+            #estoque_minimo = int(linha.get('estoque_minimo', 0))
+            #categoria_nome = linha.get('categoria', '').strip()
+            
+            #if not nome or not categoria_nome:
+                #flash('Nome ou categoria ausente em alguma linha.', 'danger')
+                #continue
+
+            #categoria = Categoria.query.filter_by(nome=categoria_nome).first()
+            #if not categoria:
+                #categoria = Categoria(nome=categoria_nome)
+                #db.session.add(categoria)
+                #db.session.commit()
+
+            # Verifica se já existe produto com mesmo nome E mesmo preço
+            #produto_existente = Produto.query.filter_by(nome=nome, preco=preco).first()
+            #if produto_existente:
+                # Atualiza o produto existente
+                #produto_existente.quantidade += quantidade
+            #else:
+                # Se não existe, cria novo produto
+                #produto = Produto(
+                    #nome=nome,
+                    #quantidade=quantidade,
+                    #preco=preco,
+                    #estoque_minimo=estoque_minimo,
+                    #categoria_id=categoria.id
+                #)
+                #db.session.add(produto)
+
+        #db.session.commit()
+        #flash('Produtos importados com sucesso!', 'success')
+    #except Exception as e:
+        #flash(f'Erro ao importar arquivo: {str(e)}', 'danger')
+
+    return redirect(url_for('relatorio'))
 
 
 def test_importar_csv(client, db):

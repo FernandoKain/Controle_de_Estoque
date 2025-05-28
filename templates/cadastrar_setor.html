@@ -27,16 +27,20 @@
     <h4>Setores Cadastrados:</h4>
     <ul class="list-group">
       {% for setor in setores %}
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-          {{ setor.nome }}
-          <div class="btn-group">
-            <a href="{{ url_for('editar_setor', id=setor.id) }}" class="btn btn-sm btn-primary">Editar</a>
-            <form method="POST" action="{{ url_for('excluir_setor', id=setor.id) }}" onsubmit="return confirm('Tem certeza que deseja excluir este Setor?')">
-              <button type="submit" class="btn btn-sm btn-danger">Excluir</button>
-            </form>
-          </div>
-        </li>
-      {% endfor %}
+        <!-- Completar código abaixo após incluir campo status -->
+        <!-- if setor.ativo -->
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            {{ setor.nome }}
+            <div class="btn-group">
+              <a href="{{ url_for('editar_setor', id=setor.id) }}" class="btn btn-sm btn-primary">Editar</a>
+              <form method="POST" action="{{ url_for('desabilitar_setor', id=setor.id) }}" onsubmit="return confirm('Tem certeza que deseja desabilitar este Setor? (Essa ação não pode ser desfeita)')">
+                <button type="submit" class="btn btn-sm btn-danger">Desabilitar</button>
+              </form>
+            </div>
+          </li>
+        <!-- endif -->
+        {% endfor %}
     </ul>
   </div>
 {% endblock %}
+

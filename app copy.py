@@ -1,95 +1,53 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash, make_response, send_file, render_template_string
+# Flask e extensões principais
+from flask import Flask, render_template, render_template_string, request, redirect, url_for, session, flash, make_response, send_file
+
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import or_
-from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user, UserMixin
+
+# SQLAlchemy adicional
+from sqlalchemy import or_
+
+# Segurança
+from werkzeug.security import generate_password_hash, check_password_hash
+
+# Utilidades do sistema
 from datetime import datetime
+import os
 import csv
 import io
-import os
+
+# Exportação e geração de PDF
+from xhtml2pdf import pisa
+from io import BytesIO, StringIO
+
+
+# Testes (se estiver usando pytest de fato)
 import pytest
-from xhtml2pdf import pisa
-from flask import Flask, render_template, request, redirect, url_for, session, flash
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import or_
-from werkzeug.security import generate_password_hash, check_password_hash
-from flask_login import LoginManager, login_user, login_required, logout_user, current_user, UserMixin
-from datetime import datetime
-from flask import make_response
-from flask import send_file
-import csv
-from io import StringIO
-from io import BytesIO
-from xhtml2pdf import pisa
-import csv
+
+# Importa o db e os modelos do arquivo models.py
+from models import db, Usuario, Categoria, Produto, Setor, Movimentacao
+
+# Importa o unicodedata para normalização de strings
+import unicodedata
+
+# Importa o módulo de IO para manipulação de arquivos
 from io import TextIOWrapper
-from flask import request, redirect, url_for, flash
-from flask import render_template_string
-from datetime import datetime
-import os
-import io
 
 
-# ==================================================
-# Configuração inicial
-# ==================================================
+# =======================================================
+# Configuração da aplicação
+# =======================================================
 app = Flask(__name__)
-app.secret_key = '123'  # Troque isso por uma chave segura
+app.secret_key = '123'  # Troque por uma chave segura
 
+# Configuração do banco
 base_dir = os.path.abspath(os.path.dirname(__file__))
 os.makedirs(os.path.join(base_dir, 'database'), exist_ok=True)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(base_dir, 'database', 'estoque.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-db = SQLAlchemy(app)
-
-# ==================================================
-# Modelos do Banco de Dados
-# ==================================================
-class Usuario(db.Model, UserMixin):
-    id = db.Column(db.Integer, primary_key=True)
-    nome = db.Column(db.String(100), nullable=False)
-    email = db.Column(db.String(100), unique=True, nullable=False)
-    senha = db.Column(db.String(200), nullable=False)
-    tipo = db.Column(db.String(20), nullable=False, default='usuario')  # 'admin' ou 'usuario'
-    
-    @property
-    def is_admin(self):
-        return self.tipo=='admin'
-
-class Categoria(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    nome = db.Column(db.String(50), nullable=False, unique=True)
-    produtos = db.relationship('Produto', backref='categoria', lazy=True)
-
-class Produto(db.Model):
-    __tablename__ = 'produtos'
-    id = db.Column(db.Integer, primary_key=True)
-    nome = db.Column(db.String(100), nullable=False)
-    quantidade = db.Column(db.Integer, nullable=False)
-    preco = db.Column(db.Float, nullable=False)
-    estoque_minimo = db.Column(db.Integer, nullable=False, default=0)
-    categoria_id = db.Column(db.Integer, db.ForeignKey('categoria.id'), nullable=False)
-
-class Setor(db.Model):
-    __tablename__ = 'setores'
-    id = db.Column(db.Integer, primary_key=True)
-    nome = db.Column(db.String(100), nullable=False)
-
-    def __repr__(self):
-        return f'<Setor {self.nome}>'
-
-class Movimentacao(db.Model):
-    __tablename__ = 'movimentacoes'
-    id = db.Column(db.Integer, primary_key=True)
-    produto_id = db.Column(db.Integer, db.ForeignKey('produtos.id'))
-    tipo = db.Column(db.String(10))  # entrada ou saida
-    quantidade = db.Column(db.Integer)
-    data = db.Column(db.DateTime, default=datetime.utcnow)
-    setor_id = db.Column(db.Integer, db.ForeignKey('setores.id'), nullable=True)
-
-    produto = db.relationship('Produto', backref='movimentacoes')
-    setor = db.relationship('Setor', backref='movimentacoes')
+# Inicializa o banco com a instância do app
+db.init_app(app)
 
 
 
@@ -100,6 +58,7 @@ login_manager = LoginManager()
 login_manager.login_view = 'login'
 login_manager.init_app(app)
 
+
 @login_manager.user_loader
 def load_user(user_id):
     return Usuario.query.get(int(user_id))
@@ -107,6 +66,8 @@ def load_user(user_id):
 # ==================================================
 # Rotas de autenticação
 # ==================================================
+
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -145,22 +106,56 @@ def index():
     return render_template('index.html', produtos=produtos, categorias=categorias)
 
 
+@app.route('/lista_compras')
+@login_required
+def lista_compras():
+    movimentacoes = Movimentacao.query.order_by(Movimentacao.data.desc()).all()
+    return render_template('lista_compras.html', movimentacoes=movimentacoes)
+
+
+
+# ==================================================
+# Função para normalizar texto (remover acentos e converter para minúsculas) para ajudar na rota de adicionar produtos
+import unicodedata
+def normalizar_texto(texto):
+    """Remove acentos e converte para minúsculas."""
+    texto = texto.strip().lower()
+    texto = unicodedata.normalize('NFKD', texto)
+    texto = ''.join([c for c in texto if not unicodedata.combining(c)])
+    return texto
+
 @app.route('/adicionar', methods=['POST'])
 @login_required
 def adicionar():
-    nome = request.form['nome']
+    nome_original = request.form['nome'].strip()
+    nome_normalizado = normalizar_texto(nome_original)
     quantidade = int(request.form['quantidade'])
     preco = float(request.form['preco'])
     estoque_minimo = int(request.form['estoque_minimo'])
     categoria_id = int(request.form['categoria_id'])
 
-    produto = Produto(nome=nome, quantidade=quantidade, preco=preco,
-                      estoque_minimo=estoque_minimo, categoria_id=categoria_id)
+    # Verifica se já existe um produto com o mesmo nome (ignorando acentos e maiúsculas)
+    produtos = Produto.query.all()
+    for p in produtos:
+        if normalizar_texto(p.nome) == nome_normalizado:
+            flash('Produto já cadastrado. Utilize "Movimentar" caso queira dar entrada no produto.', 'danger')
+            return redirect(url_for('index'))
+
+    # Se não existir, adiciona o novo produto
+    produto = Produto(
+        nome=nome_original,
+        quantidade=quantidade,
+        preco=preco,
+        estoque_minimo=estoque_minimo,
+        categoria_id=categoria_id
+    )
 
     db.session.add(produto)
     db.session.commit()
     flash('Produto adicionado com sucesso.', 'success')
     return redirect(url_for('index'))
+
+
 
 @app.route('/edit/<int:id>')
 @login_required
@@ -180,7 +175,7 @@ def update(id):
     produto.estoque_minimo = int(request.form['estoque_minimo'])  # você usa isso no form
     db.session.commit()
     flash('Produto atualizado com sucesso.', 'success')
-    return redirect(url_for('edit', id=id))
+    return redirect(url_for('index', id=id))
 
 
 @app.route('/categorias', methods=['GET', 'POST'])
@@ -328,6 +323,52 @@ def excluir_categoria(id):
         flash('Categoria excluída com sucesso.', 'success')
 
     return redirect(url_for('categorias'))
+
+
+# ==================================================
+# Editar e exlcuir setores
+# ==================================================
+@app.route('/editar_setor/<int:id>', methods=['GET', 'POST'])
+@login_required
+def editar_setor(id):
+    if not current_user.is_admin:
+        flash("Acesso restrito ao administrador.", "danger")
+        return redirect(url_for('cadastrar_setor'))
+
+    setor = Setor.query.get_or_404(id)
+
+    if request.method == 'POST':
+        novo_nome = request.form['nome']
+        if not novo_nome:
+            flash('O nome do setor é obrigatório.', 'danger')
+        else:
+            existente = Setor.query.filter_by(nome=novo_nome).first()
+            if existente and existente.id != setor.id:
+                flash('Já existe um setor com esse nome.', 'warning')
+            else:
+                setor.nome = novo_nome
+                db.session.commit()
+                flash('Setor atualizado com sucesso.', 'success')
+                return redirect(url_for('cadastrar_setor'))
+
+    return render_template('editar_setor.html', setor=setor)
+
+@app.route('/desabilitar_setor/<int:id>', methods=['POST'])
+@login_required
+def desabilitar_setor(id):
+    if not current_user.is_admin:
+        flash("Acesso restrito ao administrador.", "danger")
+        return redirect(url_for('cadastrar_setor'))
+
+    setor = Setor.query.get_or_404(id)
+
+    # Caso seja incluído o campo status no modelo Setor, descomente as linhas abaixo
+    #setor.status = False  # Define o status como inativo
+    #db.session.commit()
+    
+    #flash('Setor desabilitado com sucesso.', 'success')
+
+    return redirect(url_for('cadastrar_setor'))
 
 
 # ==================================================
@@ -509,6 +550,7 @@ def importar_csv():
             preco = float(linha['preco'])
             estoque_minimo = int(linha.get('estoque_minimo', 0))
             categoria_nome = linha.get('categoria', '').strip()
+            print("Importando produto:", nome, quantidade, preco, estoque_minimo, categoria_nome)
 
             if not nome or not categoria_nome:
                 flash('Nome ou categoria ausente em alguma linha.', 'danger')
@@ -520,14 +562,21 @@ def importar_csv():
                 db.session.add(categoria)
                 db.session.commit()
 
-            produto = Produto(
-                nome=nome,
-                quantidade=quantidade,
-                preco=preco,
-                estoque_minimo=estoque_minimo,
-                categoria_id=categoria.id
-            )
-            db.session.add(produto)
+            # Verifica se já existe produto com mesmo nome E mesmo preço
+            produto_existente = Produto.query.filter_by(nome=nome, preco=preco).first()
+            if produto_existente:
+                # Atualiza o produto existente
+                produto_existente.quantidade += quantidade
+            else:
+                # Se não existe, cria novo produto
+                produto = Produto(
+                    nome=nome,
+                    quantidade=quantidade,
+                    preco=preco,
+                    estoque_minimo=estoque_minimo,
+                    categoria_id=categoria.id
+                )
+                db.session.add(produto)
 
         db.session.commit()
         flash('Produtos importados com sucesso!', 'success')

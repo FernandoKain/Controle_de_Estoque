@@ -5,7 +5,14 @@
 {% block content %}
   <div class="container mt-5">
     <h2 class="mb-4">📊 Relatório de Movimentações</h2>
-
+    <div class="col-12">
+      <a href="{{ url_for('exportar_csv_movimentacoes') }}" class="btn btn-success ms-2">Exportar CSV</a>
+      <!-- Formulário para importar CSV -->
+      <form action="{{ url_for('importar_csv_movimentacoes') }}" method="post" enctype="multipart/form-data" style="display:inline;">
+        <input type="file" name="arquivo_csv" accept=".csv" style="display:inline;" required>
+        <button type="submit" class="btn btn-primary ms-2">Importar CSV</button>
+      </form>
+  </div>
     <table class="table table-striped">
       <thead>
         <tr>
