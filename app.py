@@ -649,48 +649,41 @@ def importar_csv_movimentacoes():
         flash('Formato de arquivo inválido. Envie um arquivo .csv', 'danger')
         return redirect(url_for('index'))
 
-    print("Importando movimentações... Continuar implementação")
-    #try:
-        #stream = TextIOWrapper(arquivo, encoding='utf-8')
-        #reader = csv.DictReader(stream)
+    try:
+        stream = TextIOWrapper(arquivo, encoding='utf-8')
+        reader = csv.DictReader(stream)
 
-        #for linha in reader:
-            #nome = linha['nome']
-            #quantidade = int(linha['quantidade'])
-            #preco = float(linha['preco'])
-            #estoque_minimo = int(linha.get('estoque_minimo', 0))
-            #categoria_nome = linha.get('categoria', '').strip()
-            
-            #if not nome or not categoria_nome:
-                #flash('Nome ou categoria ausente em alguma linha.', 'danger')
-                #continue
+        for linha in reader:
+            data_str = linha['data']
+            produto_nome = linha['produto']
+            tipo = linha['tipo']
+            quantidade = int(linha['qtd'])
+            setor_nome = linha.get('setor', '').strip()
 
-            #categoria = Categoria.query.filter_by(nome=categoria_nome).first()
-            #if not categoria:
-                #categoria = Categoria(nome=categoria_nome)
-                #db.session.add(categoria)
-                #db.session.commit()
+            # Converte a string de data para datetime
+            data = datetime.strptime(data_str, '%Y-%m-%d %H:%M:%S')
 
-            # Verifica se já existe produto com mesmo nome E mesmo preço
-            #produto_existente = Produto.query.filter_by(nome=nome, preco=preco).first()
-            #if produto_existente:
-                # Atualiza o produto existente
-                #produto_existente.quantidade += quantidade
-            #else:
-                # Se não existe, cria novo produto
-                #produto = Produto(
-                    #nome=nome,
-                    #quantidade=quantidade,
-                    #preco=preco,
-                    #estoque_minimo=estoque_minimo,
-                    #categoria_id=categoria.id
-                #)
-                #db.session.add(produto)
+            produto = Produto.query.filter_by(nome=produto_nome).first()
+            if not produto:
+                flash(f'Produto "{produto_nome}" não encontrado.', 'danger')
+                continue
 
-        #db.session.commit()
-        #flash('Produtos importados com sucesso!', 'success')
-    #except Exception as e:
-        #flash(f'Erro ao importar arquivo: {str(e)}', 'danger')
+            setor = Setor.query.filter_by(nome=setor_nome).first() if setor_nome else None
+
+            nova_movimentacao = Movimentacao(
+                produto_id=produto.id,
+                tipo=tipo,
+                quantidade=quantidade,
+                data=data,
+                setor_id=setor.id if setor else None
+            )
+            db.session.add(nova_movimentacao)
+
+        db.session.commit()
+        flash('Movimentações importadas com sucesso!', 'success')
+    except Exception as e:
+        flash(f'Erro ao importar arquivo: {str(e)}', 'danger')
+        
 
     return redirect(url_for('relatorio'))
 
