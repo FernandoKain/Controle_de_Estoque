@@ -14,32 +14,39 @@
       </form>
   </div>
     <table class="table table-striped">
-      <thead>
-        <tr>
-          <th>Data</th>
-          <th>Produto</th>
-          <th>Tipo</th>
-          <th>Quantidade</th>
-          <th>Setor</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for mov in movimentacoes %}
-        <tr>
-          <td>{{ mov.data.strftime('%d/%m/%Y %H:%M') }}</td>
-          <td>{{ mov.produto.nome }}</td>
-          <td>{{ mov.tipo.title() }}</td>
-          <td>{{ mov.quantidade }}</td>
-          <td>
-            {% if mov.tipo == 'saida' and mov.setor %}
-              {{ mov.setor.nome }}
-            {% else %}
-              -
-            {% endif %}
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <thead>
+      <tr>
+        <th>Data</th>
+        <th>Produto</th>
+        <th>Tipo</th>
+        <th>Quantidade</th>
+        <th>Setor</th>
+        <th>Ações</th> <!-- nova coluna -->
+      </tr>
+    </thead>
+    <tbody>
+      {% for mov in movimentacoes %}
+      <tr>
+        <td>{{ mov.data.strftime('%d/%m/%Y %H:%M') }}</td>
+        <td>{{ mov.produto.nome }}</td>
+        <td>{{ mov.tipo.title() }}</td>
+        <td>{{ mov.quantidade }}</td>
+        <td>
+          {% if mov.tipo == 'saida' and mov.setor %}
+            {{ mov.setor.nome }}
+          {% else %}
+            -
+          {% endif %}
+        </td>
+        <td>
+          <form action="{{ url_for('excluir_movimentacao', id=mov.id) }}" method="POST" onsubmit="return confirm('Deseja realmente excluir esta movimentação?');">
+            <button type="submit" class="btn btn-danger btn-sm">Excluir</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
   </div>
 {% endblock %}

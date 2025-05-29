@@ -221,6 +221,7 @@ def movimentar():
     setores = Setor.query.all()
     return render_template('movimentar.html', produtos=produtos, setores=setores)
 
+
 @app.route('/registrar_movimentacao', methods=['POST'])
 @login_required
 def registrar_movimentacao():
@@ -253,6 +254,26 @@ def registrar_movimentacao():
     db.session.commit()
     flash('Movimentação registrada com sucesso.', 'success')
     return redirect(url_for('movimentar'))
+
+
+@app.route('/excluir_movimentacao/<int:id>', methods=['POST'])
+@login_required
+def excluir_movimentacao(id):
+    movimentacao = Movimentacao.query.get_or_404(id)
+    produto = Produto.query.get(movimentacao.produto_id)
+
+    # Reverter o estoque
+    if movimentacao.tipo == 'entrada':
+        produto.quantidade -= movimentacao.quantidade
+    elif movimentacao.tipo == 'saida':
+        produto.quantidade += movimentacao.quantidade
+
+    db.session.delete(movimentacao)
+    db.session.commit()
+
+    flash('Movimentação excluída com sucesso.', 'success')
+    return redirect(url_for('relatorio'))
+
 
 # ==================================================
 # Cadastrar Setor

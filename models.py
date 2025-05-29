@@ -1,9 +1,16 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from datetime import datetime
+import pytz
 
 db = SQLAlchemy()
 
+# ==================================================
+# Função para obter a hora atual em Brasília
+# ==================================================
+def hora_Brasilia():
+    """Retorna a hora atual em Brasília."""
+    return datetime.now(pytz.timezone('America/Sao_Paulo'))
 
 # ==================================================
 # Modelos do Banco de Dados
@@ -51,8 +58,9 @@ class Movimentacao(db.Model):
     produto_id = db.Column(db.Integer, db.ForeignKey('produtos.id'))
     tipo = db.Column(db.String(10))  # entrada ou saida
     quantidade = db.Column(db.Integer)
-    data = db.Column(db.DateTime, default=datetime.utcnow)
+    data = db.Column(db.DateTime, default=hora_Brasilia)
     setor_id = db.Column(db.Integer, db.ForeignKey('setores.id'), nullable=True)
 
     produto = db.relationship('Produto', backref='movimentacoes')
     setor = db.relationship('Setor', backref='movimentacoes')
+
