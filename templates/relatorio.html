@@ -6,7 +6,11 @@
   <div class="container mt-5">
     <h2 class="mb-4">📊 Relatório de Movimentações</h2>
 
+<<<<<<< HEAD
           <!-- MENSAGENS FLASH -->
+=======
+    <!-- MENSAGENS FLASH -->
+>>>>>>> 90865894bd4cc4a572d69f98be4212779546da29
     {% with mensagens = get_flashed_messages(with_categories=true) %}
       {% if mensagens %}
         {% for categoria, mensagem in mensagens %}
@@ -18,7 +22,10 @@
       {% endif %}
     {% endwith %}
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 90865894bd4cc4a572d69f98be4212779546da29
     <div class="col-12">
       <a href="{{ url_for('exportar_csv_movimentacoes') }}" class="btn btn-success ms-2">Exportar CSV</a>
       <!-- Formulário para importar CSV -->
