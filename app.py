@@ -710,6 +710,7 @@ def test_importar_csv(client, db):
     produto_teste = Produto.query.filter_by(nome='Produto Teste').first()
     assert produto_teste is not None
     assert produto_teste.quantidade == 10
+    
 
 # ==================================================
 # Execução da aplicação
