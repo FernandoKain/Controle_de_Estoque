@@ -6,7 +6,7 @@ from flask_login import LoginManager, login_user, login_required, logout_user, c
 
 # SQLAlchemy adicional
 from sqlalchemy import or_
-from sqlalchemy import func, case, desc, and_
+from sqlalchemy import func
 
 # Segurança
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -802,38 +802,16 @@ def graficos():
     entradas_mes = [movimentacoes_mensais[m]['entrada'] for m in meses]
     saidas_mes = [movimentacoes_mensais[m]['saida'] for m in meses]
 
-    # Saldo atual por produto (Entradas - Saídas)
-    saldos = db.session.query(
-        Produto.nome,
-        func.sum(
-            case(
-                (Movimentacao.tipo == 'entrada', Movimentacao.quantidade),
-                (Movimentacao.tipo == 'saida', -Movimentacao.quantidade),
-                else_=0
-            )
-        )
-    ).join(Produto).group_by(Produto.nome).all()
-
-    nomes_saldo = [s[0] for s in saldos]
-    quantidades_saldo = [s[1] for s in saldos]
-
-
     return render_template('graficos.html',
-        nomes_produtos=nomes_produtos,
-        quantidades_produtos=quantidades_produtos,
-        nomes_setores=nomes_setores,
-        quantidades_setores=quantidades_setores,
-        meses=meses,
-        entradas_mes=entradas_mes,
-        saidas_mes=saidas_mes,
-        nomes_saldo=nomes_saldo,
-        quantidades_saldo=quantidades_saldo,
-        todos_produtos=Produto.query.all(),
-        todos_setores=Setor.query.all()
-    )
-
-
-
+                           nomes_produtos=nomes_produtos,
+                           quantidades_produtos=quantidades_produtos,
+                           nomes_setores=nomes_setores,
+                           quantidades_setores=quantidades_setores,
+                           meses=meses,
+                           entradas_mes=entradas_mes,
+                           saidas_mes=saidas_mes,
+                           todos_produtos=Produto.query.all(),
+                           todos_setores=Setor.query.all())
 
 
 

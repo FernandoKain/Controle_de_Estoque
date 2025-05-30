@@ -1,0 +1,213 @@
+{% extends 'base.html' %}
+{% block title %}Gráficos{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <h2 class="mb-4">📦 Gráficos de Movimentações</h2>
+
+  <form method="GET" action="{{ url_for('graficos') }}" class="row g-3 mb-4">
+  <div class="col-md-3">
+    <label for="data_inicio" class="form-label">Data Início</label>
+    <input type="date" name="data_inicio" id="data_inicio" class="form-control" value="{{ request.args.get('data_inicio', '') }}">
+  </div>
+  <div class="col-md-3">
+    <label for="data_fim" class="form-label">Data Fim</label>
+    <input type="date" name="data_fim" id="data_fim" class="form-control" value="{{ request.args.get('data_fim', '') }}">
+  </div>
+  <div class="col-md-3">
+    <label for="produto_id" class="form-label">Produto</label>
+    <select name="produto_id" id="produto_id" class="form-select">
+      <option value="">Todos</option>
+      {% for produto in todos_produtos %}
+        <option value="{{ produto.id }}" {% if request.args.get('produto_id') == produto.id|string %}selected{% endif %}>
+          {{ produto.nome }}
+        </option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-md-3">
+    <label for="setor_id" class="form-label">Setor</label>
+    <select name="setor_id" id="setor_id" class="form-select">
+      <option value="">Todos</option>
+      {% for setor in todos_setores %}
+        <option value="{{ setor.id }}" {% if request.args.get('setor_id') == setor.id|string %}selected{% endif %}>
+          {{ setor.nome }}
+        </option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-md-12 text-end">
+    <button type="submit" class="btn btn-primary">Filtrar</button>
+    <a href="{{ url_for('graficos') }}" class="btn btn-secondary">Limpar</a>
+  </div>
+</form>
+
+    <!-- MENSAGENS FLASH -->
+    {% with mensagens = get_flashed_messages(with_categories=true) %}
+        {% if mensagens %}
+        {% for categoria, mensagem in mensagens %}
+            <div class="alert alert-{{ categoria }} alert-dismissible fade show" role="alert">
+            {{ mensagem }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+
+
+
+<div class="container mt-5">
+  <h2 class="mb-4">📦 Gráficos de Movimentações</h2>
+
+  <div class="row">
+    <div class="col-lg-6 mb-4">
+      <h4>📊 Saídas por Produto</h4>
+      <canvas id="graficoSaidasProduto"></canvas>
+    </div>
+
+    <div class="col-lg-6 mb-4">
+      <h4>🏭 Saídas por Setor</h4>
+      <canvas id="graficoSaidasSetor"></canvas>
+    </div>
+
+    <div class="col-lg-6 mb-4">
+      <h4>📆 Entradas e Saídas por Mês</h4>
+      <canvas id="graficoMensal"></canvas>
+    </div>
+
+    <div class="col-lg-6 mb-4">
+      <h4>📦 Saldo Atual por Produto</h4>
+      <canvas id="graficoSaldoProduto"></canvas>
+    </div>
+  </div>
+</div>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // Gráfico: Saídas por Produto
+  const ctxProduto = document.getElementById('graficoSaidasProduto').getContext('2d');
+  const graficoProduto = new Chart(ctxProduto, {
+    type: 'bar',
+    data: {
+      labels: {{ nomes_produtos | tojson }},
+      datasets: [{
+        label: 'Quantidade de Saídas',
+        data: {{ quantidades_produtos | tojson }},
+        backgroundColor: 'rgba(54, 162, 235, 0.7)',
+        borderColor: 'rgba(54, 162, 235, 1)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: { beginAtZero: true, title: { display: true, text: 'Quantidade' } },
+        x: { title: { display: true, text: 'Produtos' } }
+      }
+    }
+  });
+
+  // Gráfico: Saídas por Setor
+  const ctxSetor = document.getElementById('graficoSaidasSetor').getContext('2d');
+  const graficoSetor = new Chart(ctxSetor, {
+    type: 'pie',
+    data: {
+      labels: {{ nomes_setores | tojson }},
+      datasets: [{
+        label: 'Saídas por Setor',
+        data: {{ quantidades_setores | tojson }},
+        backgroundColor: [
+          'rgba(255, 99, 132, 0.6)',
+          'rgba(255, 206, 86, 0.6)',
+          'rgba(75, 192, 192, 0.6)',
+          'rgba(153, 102, 255, 0.6)',
+          'rgba(255, 159, 64, 0.6)'
+        ],
+        borderColor: 'rgba(255,255,255,1)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true
+    }
+  });
+
+  // Saldo por Produto
+  const ctxSaldo = document.getElementById('graficoSaldoProduto').getContext('2d');
+  const graficoSaldo = new Chart(ctxSaldo, {
+    type: 'bar',
+    data: {
+      labels: {{ nomes_saldo | tojson }},
+      datasets: [{
+        label: 'Saldo em Estoque',
+        data: {{ quantidades_saldo | tojson }},
+        backgroundColor: 'rgba(75, 192, 192, 0.7)',
+        borderColor: 'rgba(75, 192, 192, 1)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: {
+          beginAtZero: true,
+          title: { display: true, text: 'Unidades em Estoque' }
+        },
+        x: {
+          title: { display: true, text: 'Produto' }
+        }
+      }
+    }
+  });
+
+  // Gráfico: Entradas e Saídas por Mês
+  const ctxMensal = document.getElementById('graficoMensal').getContext('2d');
+  const graficoMensal = new Chart(ctxMensal, {
+    type: 'line',
+    data: {
+      labels: {{ meses | tojson }},
+      datasets: [
+        {
+          label: 'Entradas',
+          data: {{ entradas_mes | tojson }},
+          backgroundColor: 'rgba(75, 192, 192, 0.2)',
+          borderColor: 'rgba(75, 192, 192, 1)',
+          borderWidth: 2,
+          tension: 0.3,
+          fill: true
+        },
+        {
+          label: 'Saídas',
+          data: {{ saidas_mes | tojson }},
+          backgroundColor: 'rgba(255, 99, 132, 0.2)',
+          borderColor: 'rgba(255, 99, 132, 1)',
+          borderWidth: 2,
+          tension: 0.3,
+          fill: true
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        title: {
+          display: true,
+          text: 'Movimentações Mensais de Estoque'
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          title: { display: true, text: 'Quantidade' }
+        },
+        x: {
+          title: { display: true, text: 'Mês/Ano' }
+        }
+      }
+    }
+  });
+</script>
+{% endblock %}
