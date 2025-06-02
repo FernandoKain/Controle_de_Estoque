@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+
+{% block title %}Documentação - Controle de Estoque{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1 class="mb-4">CONTROLE DE ESTOQUE</h1>
+  <h2>SISTEMA LOCAL</h2>
+  <hr>
+
+  <h3 class="mt-4">Home</h3>
+  <div class="text-center">
+    <img src="{{ url_for('static', filename='images/manual1.png') }}" class="img-fluid img-thumbnail rounded" alt="Página inicial do estque">
+  </div>
+  <br>
+  <p>Esta é a página inicial do sistema de controle de estoque da FUNSERV. Aqui você pode acessar as principais funcionalidades do sistema.</p>
+  <p>Na parte superior, você encontrará o menu de navegação com as seguintes opções:</p>
+  <ul>
+    <li><strong>Home</strong> – Retorna à página inicial.</li>
+    <li><strong>Movimentar</strong> – Permite registrar entradas e saídas de itens do estoque.</li>
+    <li><strong>Relatório</strong> – Exibe um relatório das movimentações do estoque.</li>
+    <li><strong>Relatório Avançado</strong> – Permite consultas mais detalhadas sobre o estoque.</li>
+    <li><strong>Lista de Compras</strong> – Exibe os itens solicitados para compra futura.</li>
+    <li><strong>Gráficos</strong> – Visualiza dados do estoque em formato gráfico.</li>
+  </ul>
+  <p>Na parte inferior, você encontrará informações sobre o usuário logado e opções de logout.</p>
+  <p>O sistema é dividido em seções para facilitar o acesso às funcionalidades principais.</p>
+
+  <hr>
+
+  <h3 class="mt-4">Lista de Produtos</h3>
+
+  <p>Esta seção exibe todos os itens disponíveis no estoque da FUNSERV. A tabela contém as seguintes colunas:</p>
+
+  <p>As colunas são definidas da seguinte forma:</p>
+
+  <p><strong>ID</strong> – ID É o número identificador interno do sistema que este concedeu para determinado item no estoque da FUNSERV.</p>
+  <p><strong>Nome</strong> – Nome do item que está à disposição de todos os setores, considerando que o estoque é um bem finito, aquele que requisitar primeiro irá levar o bem.</p>
+  <p><strong>Categoria</strong> – Forma de categorizar os itens, atualmente contamos com as seguintes categorias Informática, Escritório, Telefonia, Infraestrutura, Limpeza, Softwares, Ferramentas, Mobiliário.</p>
+  <p><strong>Quantidade</strong> – Em quantidade, podemos ver quantos itens iguais aqueles existem na FUNSERV.</p>
+  <p><strong>Preço UNITÁRIO</strong> - O preço deve ser posto de forma unitária, pois o cálculo, será feito da forma de quantidade de itens x preço determinado.</p>
+  <p><strong>Ações</strong> - O gestor do estoque está limitado a duas ações, <strong>Editar</strong> ou <strong>Excluir</strong>. Ambos são autoexplicativos. Com Editar você consegue alterar o nome, a categoria, a quantidade, o preço e o estoque mínimo. Com excluir, você conseguirá tirar determinado item da lista de itens estocados.</p>
+
+  <hr>
+
+  <h3 class="mt-4">Adicionar Produto</h3>
+  <div class="text-center">
+    <img src="{{ url_for('static', filename='images/manual2.png') }}" class="img-fluid img-thumbnail rounded" alt="Página inicial do estque">
+  </div>
+  <br>
+  <p>Nesta seção, que se encontra na Home, é possível adicionar os produtos que vierem a ser  comprados pela FUNSERV, é a forma pela qual podemos fazer a entrada de produtos na FUNSERV, SALVO, os patrimônios, estes possuem entrada através da CONAM, que tem um manual próprio.</p>
+  <ul>
+    <li><strong>Nome</strong> - Nome do item que estará à disposição de todos os setores, considerando que o estoque é um bem finito, aquele que requisitar primeiro irá levar o bem.</li>
+    <li><strong>Categoria</strong> - Ao cadastrar um bem, deverá ser escolhido uma das seguintes categorias: Informática, Escritório, Telefonia, Infraestrutura, Limpeza, Softwares, Ferramentas, Mobiliário.</li>
+    <li><strong>Quantidade</strong> - Quantas unidades um determinado setor requisitou.</li>
+    <li><strong>Preço UNITÁRIO</strong> - O preço deve ser posto de forma unitária, pois o cálculo, será feito da forma de quantidade de itens x preço determinado.</li>
+    <li><strong>Estoque mínimo</strong> – Valor que ao ser atingido, o bem ficará com uma cor de fundo avermelhada, indicando estar no estoque mínimo. Itens que estão no valor mínimo, recomenda-se restabelecer a quantidade, mas depende da necessidade do bem.</li>
+  </ul>
+
+  <hr>
+
+  <h3 class="mt-4">Movimentar</h3>
+  <p>Nesta página, realizaremos a entrada e saída de bens do estoque para os setores requisitantes.</p>
+  <div class="text-center">
+    <img src="{{ url_for('static', filename='images/manual3.png') }}" class="img-fluid img-thumbnail rounded" alt="Página inicial do estque">
+  </div>
+  <br>
+  <p>Realiza entrada ou saída de bens do estoque para os setores.</p>
+  <ul>
+    <li><strong>Produto</strong> – Nome do item que o setor requisitante pediu.</li>
+    <li><strong>Tipo</strong>
+      <ul>
+        <li><strong>Saída</strong> – Evento mais frequente referente a movimentação de itens de estoque. Sempre coloque <strong>SAÍDA</strong> quando você for sair um item do estoque para algum setor na FUNSERV</li>
+        <li><strong>Entrada</strong> – Evento mais raro de acontecer referente à movimentação de itens do estoque. Sempre coloque <strong>ENTRADA</strong> quando houver uma compra de item que ficará no estoque, também há a opção de subir muitos itens de apenas 1 vez.</li>
+      </ul>
+    </li>
+    <li><strong>Quantidade</strong> – A quantidade, é o número de produtos que o setor pediu.</li>
+    <li><strong>Setor</strong> – Ex: DIF, SEF, SLC, SCP, DISPRE, SPAB, etc.</li>
+  </ul>
+
+  <p><strong>Setor: Escolha uma das opções abaixo</strong></p>
+  <ul>
+    <li>DIF – Divisão Financeira</li>
+    <li>SEF – Seção Financeira</li>
+    <li>SLC – Seção de Licitação e Compras</li>
+    <li>SCP – Seção de Compensação Previdenciária</li>
+    <li>DISPRE – Divisão de Suporte Previdenciário</li>
+    <li>SPAB – Seção de Preparação e Análise de Benefícios</li>
+    <li>SCAF – Seção de Cadastro Funcional</li>
+    <li>SGD – Seção de Gestão Documental</li>
+    <li>DADM – Divisão Administrativa</li>
+    <li>SAP – Seção Administrativa e Patrimonial</li>
+    <li>SPB – Seção de Pagamentos e Benefícios</li>
+    <li>DAE – Divisão de Atendimento e Expediente</li>
+    <li>SAE – Seção de Atendimento e Expediente</li>
+    <li>SSCAS – Seção de Cadastro e Credenciamento e Assistência à Saúde</li>
+    <li>DCM – Divisão de Contas Médicas</li>
+    <li>SCM – Seção de Contas Médicas</li>
+    <li>SCPM – Seção de Compras Médicas</li>
+    <li>CTI – Controle Interno</li>
+    <li>OV – Ouvidoria</li>
+    <li>PD – Proteção de Dados</li>
+    <li>SCT – Seção de Comunicação e Transparência</li>
+    <li>PG – Procuradoria Geral</li>
+  </ul>
+
+  <hr>
+
+  <p><strong>REGISTRAR</strong> – Botão para salvar a movimentação.</p>
+
+  <h3 class="mt-4">Relatório</h3>
+  <p>Registro de todas as movimentações do estoque, exibindo as mais recentes primeiro.</p>
+  <p>É o registro de todas as movimentações ocorridas no setor de estoque, desde a troca para o sistema local desenvolvido pelos nossos analistas.</p>
+  <p>As movimentações mais recentes estarão em primeiro, enquanto que as antigas estarão por último.</p>
+  <p>Imagem abaixo de exemplo</p>
+
+  <ul>
+    <li><strong>Data</strong> - É o dia que ocorreu a movimentação do Estoque para o Setor Requisitante.</li>
+    <li><strong>Produto</strong> - Nome do item que o setor requisitante pediu</li>
+    <li><strong>Tipo</strong>: Saída ou Entrada - Quando sai ou entra um produto do estoque.</li>
+  <div class="text-center">
+    <img src="{{ url_for('static', filename='images/manual4.png') }}" class="img-fluid img-thumbnail rounded" alt="Página inicial do estque">
+  </div>
+  </ul>
+  <br>
+
+  <hr>
+
+  <h3 class="mt-4">Relatório Avançado</h3>
+  <ul>
+    <li><strong>Categoria</strong> - São as categorias que utilizamos para classificar os itens do estoque da <strong>FUNSERV</strong>, as Categorias são: Informática, Escritório, Telefonia, Infraestrutura, Limpeza, Softwares, Ferramentas, Mobiliário.</strong></li>
+    <li><strong>Data Início / Data Fim</strong> - Último dia do intervalo que você tem interesse em consultar. </strong></li>
+    <li><strong>Estoque baixo</strong> – São produtos que a quantidade alcançou seu estoque mínimo, ou está abaixo.</li>
+    <li><strong>Filtrar</strong> – Botão que serve para concluir a pesquisa, trazendo um resultado nos moldes que você determinou.</li>
+    <li><strong>Exportar CSV</strong> – Utilizando os padrões de informações que você deu, será gerado um documento de Excel.</li>
+    <li><strong>Exportar PDF</strong> – Utilizando os padrões de informações que você deu, será gerado um documento PDF.</li>
+  <div class="text-center">
+    <img src="{{ url_for('static', filename='images/manual5.png') }}" class="img-fluid img-thumbnail rounded" alt="Página inicial do estque">
+  </div>
+  </ul>
+  <br>
+  <hr>
+
+  <h3 class="mt-4">Lista de Compras</h3>
+  <p>Contém itens solicitados por setores para aquisição futura. Esta tabela será usada para compor o PCA do ano seguinte.</p>
+  <p><strong>INSERIR IMAGEM</strong></p>
+
+
+  <h3 class="mt-4">Gráficos</h3>
+  <p>Gráficos interativos e informativos.</p>
+  <p><strong>INSERIR IMAGEM</strong></p>
+</div>
+{% endblock %}

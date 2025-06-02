@@ -64,6 +64,7 @@
               {% if current_user.is_admin %}
               <li><a class="dropdown-item" href="{{ url_for('cadastrar_setor') }}">Cadastrar Setor</a></li>
               <li><a class="dropdown-item" href="{{ url_for('categorias') }}">Cadastrar Categoria</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('manual') }}">Manual</a></li>
               <li><hr class="dropdown-divider"></li>
               {% endif %}
               <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}">Sair</a></li>
