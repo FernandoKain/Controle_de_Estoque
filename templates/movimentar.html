@@ -48,7 +48,9 @@
         <select class="form-select" name="setor_id">
           <option value="">-- Selecione --</option>
           {% for setor in setores %}
-          <option value="{{ setor.id }}">{{ setor.nome }}</option>
+            {% if setor.status %}
+            <option value="{{ setor.id }}">{{ setor.nome }}</option>
+            {% endif %}
           {% endfor %}
         </select>
       </div>

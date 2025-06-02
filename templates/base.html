@@ -43,13 +43,13 @@
             <a class="nav-link {% if request.endpoint == 'relatorio' %}active{% endif %}" href="{{ url_for('relatorio') }}">Relatório</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('relatorio_avancado') }}">Relatório Avançado</a>
+            <a class="nav-link {% if request.endpoint == 'relatorio_avancado' %}active{% endif %}" href="{{ url_for('relatorio_avancado') }}">Relatório Avançado</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('lista_compras') }}">Lista de Compras</a>
+            <a class="nav-link {% if request.endpoint == 'lista_compras' %}active{% endif %}" href="{{ url_for('lista_compras') }}">Lista de Compras</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('graficos') }}">Gráficos</a>
+            <a class="nav-link {% if request.endpoint == 'graficos' %}active{% endif %}" href="{{ url_for('graficos') }}">Gráficos</a>
           </li>
           
         </ul>

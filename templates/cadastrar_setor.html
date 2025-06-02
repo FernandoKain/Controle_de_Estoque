@@ -6,10 +6,14 @@
   <div class="container mt-5">
     <h2 class="mb-4">🏢 Cadastrar Setor</h2>
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, message in messages %}
-          <div class="alert alert-{{ category }}">{{ message }}</div>
+      <!-- MENSAGENS FLASH -->
+    {% with mensagens = get_flashed_messages(with_categories=true) %}
+      {% if mensagens %}
+        {% for categoria, mensagem in mensagens %}
+          <div class="alert alert-{{ categoria }} alert-dismissible fade show" role="alert">
+            {{ mensagem }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
         {% endfor %}
       {% endif %}
     {% endwith %}
@@ -28,7 +32,7 @@
     <ul class="list-group">
       {% for setor in setores %}
         <!-- Completar código abaixo após incluir campo status -->
-        <!-- if setor.ativo -->
+        {% if setor.status %}
           <li class="list-group-item d-flex justify-content-between align-items-center">
             {{ setor.nome }}
             <div class="btn-group">
@@ -38,8 +42,18 @@
               </form>
             </div>
           </li>
-        <!-- endif -->
-        {% endfor %}
+        {% else %}
+          <!-- Exibir setor desabilitado -->
+          <li class="list-group-item list-group-item-secondary d-flex justify-content-between align-items-center">
+            {{ setor.nome }}<span class="badge bg-secondary">Desabilitado</span>
+            <div class="btn-group">
+              <form method="POST" action="{{ url_for('habilitar_setor', id=setor.id) }}" onsubmit="return confirm('Tem certeza que deseja habilitar este Setor?')">
+                <button type="submit" class="btn btn-sm btn-success">Habilitar</button>
+              </form>
+            </div>
+          </li>
+        {% endif %}
+      {% endfor %}
     </ul>
   </div>
 {% endblock %}

@@ -289,7 +289,14 @@ def cadastrar_setor():
     if request.method == 'POST':
         nome = request.form['nome']
         if nome:
-            novo_setor = Setor(nome=nome)
+            novo_setor = Setor(nome=nome, status=True)
+            # Verifica se já existe um setor com o mesmo nome
+            setor_existente = Setor.query.filter_by(nome=nome).first()
+            if setor_existente:
+                flash('Já existe um setor com esse nome.', 'warning')
+                return redirect(url_for('cadastrar_setor'))
+            
+            # Adiciona o novo setor ao banco de dados
             db.session.add(novo_setor)
             db.session.commit()
             flash('Setor cadastrado com sucesso!', 'success')
@@ -385,13 +392,29 @@ def desabilitar_setor(id):
     setor = Setor.query.get_or_404(id)
 
     # Caso seja incluído o campo status no modelo Setor, descomente as linhas abaixo
-    #setor.status = False  # Define o status como inativo
-    #db.session.commit()
+    setor.status = False  # Define o status como inativo
+    db.session.commit()
     
-    #flash('Setor desabilitado com sucesso.', 'success')
+    flash('Setor desabilitado com sucesso.', 'success')
 
     return redirect(url_for('cadastrar_setor'))
 
+@app.route('/habilitar_setor/<int:id>', methods=['POST'])
+@login_required
+def habilitar_setor(id):
+    if not current_user.is_admin:
+        flash("Acesso restrito ao administrador.", "danger")
+        return redirect(url_for('cadastrar_setor'))
+
+    setor = Setor.query.get_or_404(id)
+
+    setor.status = True  # Define o status como ativo
+    print(f"Habilitando setor: {setor.nome}, status: {setor.status}")  # Debugging
+    db.session.commit()
+    print(f"Habilitando setor: {setor.nome}, status: {setor.status}")  # Debugging
+    
+    flash('Setor habilitado com sucesso.', 'success')
+    return redirect(url_for('cadastrar_setor'))
 
 # ==================================================
 # Relatórios e exportação e importação de CSV e PDF
@@ -666,10 +689,16 @@ def importar_csv_movimentacoes():
 
             produto = Produto.query.filter_by(nome=produto_nome).first()
             if not produto:
-                flash(f'Produto "{produto_nome}" não encontrado.', 'danger')
+                flash(f'Produto "{produto_nome}" não encontrado. Movimentação não importada.', 'danger')
                 continue
 
             setor = Setor.query.filter_by(nome=setor_nome).first() if setor_nome else None
+            
+            if setor is None and setor_nome != "":
+                # Se o setor não for encontrado, criá-lo
+                setor = Setor(nome=setor_nome, status=True)
+                db.session.add(setor)
+                setor = Setor.query.filter_by(nome=setor_nome).first()
 
             nova_movimentacao = Movimentacao(
                 produto_id=produto.id,
@@ -681,7 +710,7 @@ def importar_csv_movimentacoes():
             db.session.add(nova_movimentacao)
 
         db.session.commit()
-        flash('Movimentações importadas com sucesso!', 'success')
+        flash('Importação Finalizada!', 'success')
     except Exception as e:
         flash(f'Erro ao importar arquivo: {str(e)}', 'danger')
         
@@ -844,8 +873,10 @@ def graficos():
 # ==================================================
 if __name__ == '__main__':
     with app.app_context():
-        # db.drop_all()  # Use com cuidado — apaga todo banco
+        #db.drop_all()  # Use com cuidado — apaga todo banco
         db.create_all()
+        
+        # Cria o usuário admin se não existir
         if not Usuario.query.filter_by(email='admin@admin.com').first():
             senha_hash = generate_password_hash('admin123')
             admin = Usuario(nome='Admin', email='admin@admin.com', senha=senha_hash, tipo='admin')
