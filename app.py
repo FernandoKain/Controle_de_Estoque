@@ -16,6 +16,11 @@ from datetime import datetime
 import os
 import csv
 import io
+import csv
+from io import StringIO
+from datetime import datetime
+from flask import Response
+
 
 # Exportação e geração de PDF
 from xhtml2pdf import pisa
@@ -67,8 +72,6 @@ def load_user(user_id):
 # ==================================================
 # Rotas de autenticação
 # ==================================================
-
-
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -81,6 +84,9 @@ def login():
         flash('E-mail ou senha inválidos.')
     return render_template('login.html')
 
+# ==================================================
+# Rota de logout
+# ==================================================
 @app.route('/logout')
 @login_required
 def logout():
@@ -106,7 +112,9 @@ def index():
 
     return render_template('index.html', produtos=produtos, categorias=categorias)
 
-
+# ==================================================
+# Rota para a lista de compras
+# ==================================================
 @app.route('/lista_compras')
 @login_required
 def lista_compras():
@@ -117,6 +125,7 @@ def lista_compras():
 
 # ==================================================
 # Função para normalizar texto (remover acentos e converter para minúsculas) para ajudar na rota de adicionar produtos
+# ==================================================
 import unicodedata
 def normalizar_texto(texto):
     """Remove acentos e converte para minúsculas."""
@@ -125,6 +134,9 @@ def normalizar_texto(texto):
     texto = ''.join([c for c in texto if not unicodedata.combining(c)])
     return texto
 
+# ==================================================
+# Adicionar produto
+# ==================================================
 @app.route('/adicionar', methods=['POST'])
 @login_required
 def adicionar():
@@ -157,7 +169,9 @@ def adicionar():
     return redirect(url_for('index'))
 
 
-
+# ==================================================
+# Editar produto
+# ==================================================
 @app.route('/edit/<int:id>')
 @login_required
 def edit(id):
@@ -165,6 +179,9 @@ def edit(id):
     categorias = Categoria.query.all()
     return render_template('edit.html', produto=produto, categorias=categorias)
 
+# ==================================================
+# Atualizar produto
+# ==================================================
 @app.route('/update/<int:id>', methods=['POST'])
 @login_required
 def update(id):
@@ -178,7 +195,9 @@ def update(id):
     flash('Produto atualizado com sucesso.', 'success')
     return redirect(url_for('index', id=id))
 
-
+# ==================================================
+# Cadastrar categoria
+# ==================================================
 @app.route('/categorias', methods=['GET', 'POST'])
 @login_required
 def categorias():
@@ -204,6 +223,9 @@ def categorias():
     categorias = Categoria.query.all()
     return render_template('categorias.html', categorias=categorias)
 
+# ==================================================
+# Excluir produto
+# ==================================================
 @app.route('/delete/<int:id>')
 @login_required
 def delete(id):
@@ -222,7 +244,9 @@ def movimentar():
     setores = Setor.query.all()
     return render_template('movimentar.html', produtos=produtos, setores=setores)
 
-
+# ==================================================
+# Registrar movimentação (entrada ou saída)
+# ==================================================
 @app.route('/registrar_movimentacao', methods=['POST'])
 @login_required
 def registrar_movimentacao():
@@ -256,7 +280,9 @@ def registrar_movimentacao():
     flash('Movimentação registrada com sucesso.', 'success')
     return redirect(url_for('movimentar'))
 
-
+# ==================================================
+# Excluir movimentação
+# ==================================================
 @app.route('/excluir_movimentacao/<int:id>', methods=['POST'])
 @login_required
 def excluir_movimentacao(id):
@@ -276,7 +302,9 @@ def excluir_movimentacao(id):
     return redirect(url_for('relatorio'))
 
 
-
+# ==================================================
+# Página de manual
+# ==================================================
 @app.route('/manual', methods=['GET'])
 @login_required
 def manual():
@@ -317,7 +345,7 @@ def cadastrar_setor():
     return render_template('cadastrar_setor.html', setores=setores)
 
 # ==================================================
-# Editar e exlcuir categorias
+# Editar categoria
 # ==================================================
 @app.route('/editar_categoria/<int:id>', methods=['GET', 'POST'])
 @login_required
@@ -344,6 +372,9 @@ def editar_categoria(id):
 
     return render_template('editar_categoria.html', categoria=categoria)
 
+# ==================================================
+# Excluir categoria
+# ==================================================
 @app.route('/excluir_categoria/<int:id>', methods=['POST'])
 @login_required
 def excluir_categoria(id):
@@ -364,7 +395,7 @@ def excluir_categoria(id):
 
 
 # ==================================================
-# Editar e exlcuir setores
+# Editar setores
 # ==================================================
 @app.route('/editar_setor/<int:id>', methods=['GET', 'POST'])
 @login_required
@@ -391,6 +422,9 @@ def editar_setor(id):
 
     return render_template('editar_setor.html', setor=setor)
 
+# ==================================================
+# Desabilitar e habilitar setores
+# ==================================================
 @app.route('/desabilitar_setor/<int:id>', methods=['POST'])
 @login_required
 def desabilitar_setor(id):
@@ -408,6 +442,9 @@ def desabilitar_setor(id):
 
     return redirect(url_for('cadastrar_setor'))
 
+# ==================================================
+# Habilitar setores
+# ==================================================
 @app.route('/habilitar_setor/<int:id>', methods=['POST'])
 @login_required
 def habilitar_setor(id):
@@ -434,7 +471,9 @@ def relatorio():
     movimentacoes = Movimentacao.query.order_by(Movimentacao.data.desc()).all()
     return render_template('relatorio.html', movimentacoes=movimentacoes)
 
-
+# ==================================================
+# Relatório avançado com filtros
+# ==================================================
 @app.route('/relatorio_avancado')
 @login_required
 def relatorio_avancado():
@@ -479,7 +518,9 @@ def relatorio_avancado():
 
     return render_template('relatorio_avancado.html', produtos=produtos_filtrados, categorias=categorias)
 
-
+# ==================================================
+# Exportar CSV 
+# ==================================================
 @app.route('/exportar_csv')
 @login_required
 def exportar_csv():
@@ -529,7 +570,9 @@ def exportar_csv():
     output.headers["Content-type"] = "text/csv; charset=utf-8"
     return output
 
-
+# ==================================================
+# Exportar PDF
+# ==================================================
 @app.route('/exportar_pdf')
 @login_required
 def exportar_pdf():
@@ -579,7 +622,10 @@ def exportar_pdf():
         return "Erro ao gerar PDF", 500
 
 
-
+# ==================================================
+# Importar produtos de CSV
+# ==================================================
+from io import TextIOWrapper
 @app.route('/importar_csv', methods=['POST'])
 @login_required
 def importar_csv():
@@ -638,6 +684,10 @@ def importar_csv():
 
     return redirect(url_for('relatorio_avancado'))
 
+# ==================================================
+# Exportar CSV de movimentações
+# ==================================================
+
 @app.route('/exportar_csv_movimentacoes')
 @login_required
 def exportar_csv_movimentacoes():
@@ -668,6 +718,9 @@ def exportar_csv_movimentacoes():
     output.headers["Content-type"] = "text/csv; charset=utf-8"
     return output
 
+# ==================================================
+# Importar movimentações de CSV
+# ==================================================
 @app.route('/importar_csv_movimentacoes', methods=['POST'])
 @login_required
 def importar_csv_movimentacoes():
@@ -727,37 +780,83 @@ def importar_csv_movimentacoes():
     return redirect(url_for('relatorio'))
 
 
-def test_importar_csv(client, db):
-    # Conteúdo CSV de exemplo, deve bater com o seu formato esperado
-    csv_data = """ID,Nome,Categoria,Quantidade,Estoque Mínimo,Preço
-1,Produto Teste,Categoria Teste,10,5,R$ 15,50
-2,Produto Novo,Categoria Nova,20,10,R$ 30,00
-"""
+# ==================================================
+# Importar setores de CSV
+# ==================================================
+@app.route('/importar_csv_setores', methods=['POST'])
+@login_required
+def importar_csv_setores():
+    if 'arquivo_csv' not in request.files:
+        flash('Nenhum arquivo enviado.', 'danger')
+        return redirect(url_for('cadastrar_setor'))
 
-    data = {
-        'arquivo_csv': (io.BytesIO(csv_data.encode('utf-8')), 'produtos_teste.csv')
-    }
+    arquivo = request.files['arquivo_csv']
 
-    # Faz o POST para a rota /importar_csv
-    response = client.post('/importar_csv', data=data, content_type='multipart/form-data', follow_redirects=True)
+    if not arquivo.filename.endswith('.csv'):
+        flash('Formato inválido. Envie um arquivo .csv', 'danger')
+        return redirect(url_for('cadastrar_setor'))
 
-    assert response.status_code == 200
-    assert "Importação concluída com sucesso" in response.data.decode('utf-8') or "Importacao concluida com sucesso" in response.data.decode('utf-8')
+    try:
+        stream = TextIOWrapper(arquivo, encoding='utf-8')
+        reader = csv.DictReader(stream)
+
+        for linha in reader:
+            nome = linha.get('nome', '').strip()
+            if not nome:
+                flash('Linha ignorada: Nome do setor em branco.', 'warning')
+                continue
+
+            # Verifica se já existe um setor com esse nome
+            setor_existente = Setor.query.filter_by(nome=nome).first()
+            if setor_existente:
+                flash(f'Setor "{nome}" já existe. Ignorado.', 'info')
+                continue
+
+            novo_setor = Setor(nome=nome, status=True)
+            db.session.add(novo_setor)
+
+        db.session.commit()
+        flash('Importação de setores finalizada com sucesso!', 'success')
+
+    except Exception as e:
+        flash(f'Erro ao importar setores: {str(e)}', 'danger')
+
+    return redirect(url_for('cadastrar_setor'))
 
 
-    # Aqui você pode fazer mais asserts consultando o banco se quiser
-    produto_teste = Produto.query.filter_by(nome='Produto Teste').first()
-    assert produto_teste is not None
-    assert produto_teste.quantidade == 10
-    
-    
-    
+# ==================================================
+# Exportar setores para CSV
+# ==================================================
+@app.route('/exportar_csv_setores', methods=['GET'])
+@login_required
+def exportar_csv_setores():
+    setores = Setor.query.all()
+
+    # Define o nome do arquivo e o cabeçalho do CSV
+    si = StringIO()
+    writer = csv.writer(si)
+    writer.writerow(['nome', 'status'])  # Cabeçalhos
+
+    for setor in setores:
+        status_str = 'Ativo' if setor.status else 'Inativo'
+        writer.writerow([setor.nome, status_str])
+
+    output = si.getvalue()
+    si.close()
+
+    # Envia como arquivo para download
+    return Response(
+        output,
+        mimetype='text/csv',
+        headers={
+            'Content-Disposition': 'attachment; filename=setores_exportados.csv'
+        }
+    )
+
+
 # ==================================================
 # Gráficos e visualizações
 # ==================================================
-from datetime import datetime
-from sqlalchemy import func
-
 @app.route('/graficos')
 @login_required
 def graficos():
@@ -882,7 +981,7 @@ def graficos():
 # ==================================================
 if __name__ == '__main__':
     with app.app_context():
-        #db.drop_all()  # Use com cuidado — apaga todo banco
+        # db.drop_all()  # Use com cuidado — apaga todo banco
         db.create_all()
         
         # Cria o usuário admin se não existir
