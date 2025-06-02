@@ -276,6 +276,15 @@ def excluir_movimentacao(id):
     return redirect(url_for('relatorio'))
 
 
+
+@app.route('/manual', methods=['GET'])
+@login_required
+def manual():
+    if not current_user.is_admin:
+        flash('Acesso negado. Você não tem permissão para acessar esta página.', 'danger')
+        return redirect(url_for('manual.html'))
+    return render_template('manual.html')
+
 # ==================================================
 # Cadastrar Setor
 # ==================================================
