@@ -950,12 +950,39 @@ def graficos():
             )
         )
     ).join(Produto).group_by(Produto.nome).all()
+    
+    # 1. Estoque atual por produto
+    produtos = Produto.query.all()
+    estoque_atual = {}
+    for produto in produtos:
+        entradas = db.session.query(func.sum(Movimentacao.quantidade)).filter_by(produto_id=produto.id, tipo='entrada').scalar() or 0
+        saidas = db.session.query(func.sum(Movimentacao.quantidade)).filter_by(produto_id=produto.id, tipo='saida').scalar() or 0
+        saldo = entradas - saidas
+        estoque_atual[produto.nome] = saldo
+
+    # 2. Saídas por produto e por mês
+    movimentacoes_saida = db.session.query(Movimentacao).filter_by(tipo='saida').all()
+    saidas_por_produto = {}
+    meses_ordenados_set = set()
+
+    for mov in movimentacoes_saida:
+        mes = mov.data.strftime('%Y-%m')
+        nome = mov.produto.nome
+
+        if nome not in saidas_por_produto:
+            saidas_por_produto[nome] = {}
+        saidas_por_produto[nome][mes] = saidas_por_produto[nome].get(mes, 0) + mov.quantidade
+        meses_ordenados_set.add(mes)
+
+    meses_ordenados = sorted(list(meses_ordenados_set))  # para manter ordem cronológica
+
+    
 
     nomes_saldo = [s[0] for s in saldos]
     quantidades_saldo = [s[1] for s in saldos]
 
 
-    return render_template('graficos.html',
+    return render_template('graficos.html',        
         nomes_produtos=nomes_produtos,
         quantidades_produtos=quantidades_produtos,
         nomes_setores=nomes_setores,
