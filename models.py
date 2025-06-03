@@ -73,4 +73,7 @@ class Compra(db.Model):
     preco = db.Column(db.Float, nullable=True)
     setor_id = db.Column(db.Integer, db.ForeignKey('setores.id'), nullable=True)
     url = db.Column(db.String(500), nullable=True)
+
+    categoria = db.relationship('Categoria', backref='compras')
+    setor = db.relationship('Setor', backref='compras')
     
