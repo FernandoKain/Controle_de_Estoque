@@ -7,8 +7,6 @@ from flask_login import LoginManager, login_user, login_required, logout_user, c
 # SQLAlchemy adicional
 from sqlalchemy import or_
 from sqlalchemy import func, case, desc, and_
-from sqlalchemy.orm import joinedload
-
 
 # Segurança
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -949,11 +947,11 @@ def graficos():
         func.sum(
             case(
                 (Movimentacao.tipo == 'entrada', Movimentacao.quantidade),
-                (Movimentacao.tipo == 'saida', -Movimentacao.quantidade)
-            , else_=0)
+                (Movimentacao.tipo == 'saida', -Movimentacao.quantidade),
+                else_=0
+            )
         )
     ).join(Produto).group_by(Produto.nome).all()
-
     
     # 1. Estoque atual por produto
     produtos = Produto.query.all()
@@ -965,20 +963,7 @@ def graficos():
         estoque_atual[produto.nome] = saldo
 
     # 2. Saídas por produto e por mês
-    movimentacoes_saida_query = db.session.query(Movimentacao).filter(Movimentacao.tipo == 'saida')
-
-    if produto_id:
-        movimentacoes_saida_query = movimentacoes_saida_query.filter(Movimentacao.produto_id == int(produto_id))
-    if setor_id:
-        movimentacoes_saida_query = movimentacoes_saida_query.filter(Movimentacao.setor_id == int(setor_id))
-    if data_inicio:
-        movimentacoes_saida_query = movimentacoes_saida_query.filter(Movimentacao.data >= data_inicio)
-    if data_fim:
-        movimentacoes_saida_query = movimentacoes_saida_query.filter(Movimentacao.data <= data_fim)
-
-    movimentacoes_saida = movimentacoes_saida_query.all()
-
-    # Agrupa as saídas por produto e por mês
+    movimentacoes_saida = db.session.query(Movimentacao).filter_by(tipo='saida').all()
     saidas_por_produto = {}
     meses_ordenados_set = set()
 
@@ -1016,9 +1001,7 @@ def graficos():
         todos_setores=Setor.query.all()
     )
 
-# ==================================================
-# Lista de compras
-# ==================================================
+
 @app.route('/adicionar_compra', methods=['POST'])
 @login_required
 def adicionar_compra():

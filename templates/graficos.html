@@ -60,6 +60,51 @@
 
 
 
+  <hr class="mt-5 mb-4">
+  <!--Relatório de Movimentações-->
+  <h3 class="mb-4">📊 Relatório de Movimentações</h3>
+  <h4>📋 Produtos em Estoque</h4>
+  <table class="table table-bordered table-striped">
+    <thead class="table-light">
+      <tr>
+        <th>Produto</th>
+        <th>Quantidade em Estoque</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for produto, qtd in estoque_atual.items() %}
+        <tr>
+          <td>{{ produto }}</td>
+          <td>{{ qtd }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h4 class="mt-5">📆 Saídas por Produto e por Mês</h4>
+  <table class="table table-bordered table-striped">
+    <thead class="table-light">
+      <tr>
+        <th>Produto</th>
+        {% for mes in meses_ordenados %}
+          <th>{{ mes }}</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for produto, saidas_mes in saidas_por_produto.items() %}
+        <tr>
+          <td>{{ produto }}</td>
+          {% for mes in meses_ordenados %}
+            <td>{{ saidas_mes.get(mes, 0) }}</td>
+          {% endfor %}
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <hr class="mt-5 mb-4">
+
 <div class="container mt-5">
   <h2 class="mb-4">📦 Gráficos de Movimentações</h2>
 
