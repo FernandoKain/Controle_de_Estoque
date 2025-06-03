@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Edição de Produto{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h1 class="mb-4">✏️ Editar Produto da Lista de Compras</h1>
+  <form action="{{ url_for('update_compra', id=compra.id) }}" method="POST" class="row g-3">
+    <div class="col-md-6">
+      <label for="nome" class="form-label">Nome</label>
+      <input type="text" name="nome" id="nome" class="form-control" value="{{ compra.nome }}" required>
+    </div>
+    <div class="col-md-6">
+      <label for="categoria_id" class="form-label">Categoria</label>
+      <select name="categoria_id" id="categoria_id" class="form-select" required>
+        {% for cat in categorias %}
+          <option value="{{ cat.id }}" {% if compra.categoria_id == cat.id %}selected{% endif %}>{{ cat.nome }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-4">
+      <label for="quantidade" class="form-label">Quantidade</label>
+      <input type="number" name="quantidade" id="quantidade" class="form-control" value="{{ compra.quantidade }}" required min="0">
+    </div>
+    <div class="col-md-4">
+      <label for="preco" class="form-label">Preço</label>
+      <input type="number" name="preco" id="preco" class="form-control" step="0.01" value="{{ compra.preco }}" min="0">
+    </div>
+    <div class="col-md-4">
+      <label for="setor_id" class="form-label">Setor</label>
+      <select name="setor_id" id="setor_id" class="form-select">
+        <option value="">Setor que receberá</option>
+        {% for s in setores %}
+          <option value="{{ s.id }}" {% if compra.setor_id == s.id %}selected{% endif %}>{{ s.nome }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-6">
+      <label for="url" class="form-label">URL</label>
+      <input type="text" name="url" id="url" class="form-control" value="{{ compra.url }}">
+    <div class="col-12 d-flex justify-content-between mt-3">
+      <button type="submit" class="btn btn-success">💾 Salvar</button>
+      <a href="{{ url_for('lista_compras') }}" class="btn btn-secondary">Cancelar</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

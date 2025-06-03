@@ -29,7 +29,7 @@
   <!-- Formulário de adicionar produto -->
   <div class="card p-4 mb-4">
     <h5 class="card-title">Adicionar Produto</h5>
-    <form action="{{ url_for('adicionar') }}" method="POST" class="row g-3">
+    <form action="{{ url_for('adicionar_compra') }}" method="POST" class="row g-3">
       <div class="col-md-3">
         <input type="text" name="nome" class="form-control" placeholder="Nome" required>
       </div>
@@ -45,17 +45,65 @@
         <input type="number" name="quantidade" class="form-control" placeholder="Quantidade" required min="0">
       </div>
       <div class="col-md-2">
-        <input type="number" name="preco" class="form-control" step="0.01" placeholder="Preço" required min="0">
+        <input type="number" name="preco" class="form-control" step="0.01" placeholder="Preço" min="0">
       </div>
       <div class="col-md-2">
-        <!-- <input type="number" name="estoque_minimo" class="form-control" placeholder="Estoque mínimo" required min="0"> -->
+        <select class="form-select" name="setor_id">
+          <option value="">Setor que receberá</option>
+          {% for setor in setores %}
+            {% if setor.status %}
+            <option value="{{ setor.id }}">{{ setor.nome }}</option>
+            {% endif %}
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <input type="text" name="url" class="form-control" placeholder="URL">
       </div>
       <div class="col-md-1 d-grid">
         <button type="submit" class="btn btn-success">Adicionar</button>
       </div>
     </form>
   </div>
-
+  <!-- Tabela de produtos a comprar -->
+  <div class="table-responsive">
+    <table class="table table-bordered table-striped table-hover align-middle">
+      <thead class="table-dark">
+        <tr>
+          <th>ID</th>
+          <th>Nome</th>
+          <th>Categoria</th>
+          <th>Quantidade</th>
+          <th>Preço</th>
+          <th>Setor receberá</th>
+          <th>URL</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in compras %}
+        <tr>
+          <td>{{ c.id }}</td>
+          <td>{{ c.nome }}</td>
+          <td>{% if c.categoria %}{{ c.categoria.nome }}{% else %} - {% endif %}</td>
+          <td>{{ c.quantidade }}</td>
+          <td>{% if c.preco %}R$ {{ "%.2f"|format(c.preco) }}{% else %} - {% endif %}</td>
+          <td>{% if c.setor %}{{ c.setor.nome }}{% else %} - {% endif %}</td>
+          <td><a href="{{ c.url }}" target="_blank">{{ c.url }}</a></td>
+          <td>
+            <a href="{{ url_for('edit_compra', id=c.id) }}" class="btn btn-sm btn-primary">Editar</a>
+            <a href="{{ url_for('delete_compra', id=c.id) }}" class="btn btn-sm btn-danger"
+               onclick="return confirm('Deseja mesmo excluir este produto da lista de compras?');">Excluir</a>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="8" class="text-center">Nenhum produto encontrado.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 
 </div>
 {% endblock %}

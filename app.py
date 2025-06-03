@@ -26,7 +26,7 @@ from io import BytesIO, StringIO
 import pytest
 
 # Importa o db e os modelos do arquivo models.py
-from models import db, Usuario, Categoria, Produto, Setor, Movimentacao
+from models import db, Usuario, Categoria, Produto, Setor, Movimentacao, Compra
 
 # Importa o unicodedata para normalização de strings
 import unicodedata
@@ -110,8 +110,10 @@ def index():
 @app.route('/lista_compras')
 @login_required
 def lista_compras():
-    movimentacoes = Movimentacao.query.order_by(Movimentacao.data.desc()).all()
-    return render_template('lista_compras.html', movimentacoes=movimentacoes)
+    categorias = Categoria.query.all()
+    setores = Setor.query.all()
+    compras = Compra.query.all()
+    return render_template('lista_compras.html', categorias=categorias, setores=setores, compras=compras)
 
 
 
@@ -176,7 +178,7 @@ def update(id):
     produto.estoque_minimo = int(request.form['estoque_minimo'])  # você usa isso no form
     db.session.commit()
     flash('Produto atualizado com sucesso.', 'success')
-    return redirect(url_for('index', id=id))
+    return redirect(url_for('lista_compras', id=id))
 
 
 @app.route('/categorias', methods=['GET', 'POST'])
@@ -871,10 +873,76 @@ def graficos():
     )
 
 
+@app.route('/adicionar_compra', methods=['POST'])
+@login_required
+def adicionar_compra():
+    nome_original = request.form['nome'].strip()
+    nome_normalizado = normalizar_texto(nome_original)
+    categoria_id = int(request.form['categoria_id'])
+    quantidade = int(request.form['quantidade'])
+    preco = request.form['preco']
+    setor_id = request.form['setor_id']
+    # Verifica se o campo setor_id foi enviado, se não, define como None
+    if setor_id is None or setor_id == '':
+        setor_id = None
+
+    url = request.form['url'].strip()
+
+    # Verifica se já existe um produto com o mesmo nome (ignorando acentos e maiúsculas)
+    compras = Compra.query.all()
+    for c in compras:
+        if normalizar_texto(c.nome) == nome_normalizado:
+            flash('Produto já cadastrado.', 'danger')
+            return redirect(url_for('lista_compras'))
+
+    # Se não existir, adiciona o novo produto
+    compra = Compra(
+        nome=nome_normalizado,
+        categoria_id=categoria_id,
+        quantidade=quantidade,
+        preco=float(preco) if preco else None,
+        setor_id=int(setor_id) if setor_id else None,
+        url=url
+    )
+    db.session.add(compra)
+    db.session.commit()
+    flash('Produto adicionado com sucesso.', 'success')
+    return redirect(url_for('lista_compras'))
 
 
+@app.route('/edit_compra/<int:id>')
+@login_required
+def edit_compra(id):
+    compra = Compra.query.get_or_404(id)
+    categorias = Categoria.query.all()
+    setores = Setor.query.all()
+    return render_template('editar_compra.html', compra=compra, categorias=categorias, setores=setores)
 
+@app.route('/update_compra/<int:id>', methods=['POST'])
+@login_required
+def update_compra(id):
+    preco = request.form['preco']
+    setor_id = request.form.get('setor_id')
+    
+    compra = Compra.query.get_or_404(id)
+    compra.nome = request.form['nome']
+    compra.categoria_id = int(request.form['categoria_id'])
+    compra.quantidade = int(request.form['quantidade'])
+    compra.preco = float(preco) if preco else None
+    compra.setor_id = int(setor_id) if setor_id else None
+    compra.url = request.form['url'].strip()
+    db.session.commit()
+    flash('Produto atualizado com sucesso.', 'success')
+    return redirect(url_for('lista_compras', id=id))
 
+@app.route('/delete_compra/<int:id>')
+@login_required
+def delete_compra(id):
+    compra = Compra.query.get_or_404(id)
+    db.session.delete(compra)
+    db.session.commit()
+    flash('Produto removido da lista com sucesso.', 'success')
+    return redirect(url_for('lista_compras'))
 
 
 # ==================================================

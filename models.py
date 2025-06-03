@@ -64,3 +64,13 @@ class Movimentacao(db.Model):
     produto = db.relationship('Produto', backref='movimentacoes')
     setor = db.relationship('Setor', backref='movimentacoes')
 
+class Compra(db.Model):
+    __tablename__ = 'compras'
+    id = db.Column(db.Integer, primary_key=True)
+    nome = db.Column(db.String(100), nullable=False)
+    categoria_id = db.Column(db.Integer, db.ForeignKey('categoria.id'), nullable=False)
+    quantidade = db.Column(db.Integer, nullable=False)
+    preco = db.Column(db.Float, nullable=True)
+    setor_id = db.Column(db.Integer, db.ForeignKey('setores.id'), nullable=True)
+    url = db.Column(db.String(500), nullable=True)
+    
