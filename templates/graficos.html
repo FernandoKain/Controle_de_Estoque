@@ -60,26 +60,6 @@
 
 
 
-  <hr class="mt-5 mb-4">
-  <!--Relatório de Movimentações-->
-  <h3 class="mb-4">📊 Relatório de Movimentações</h3>
-  <h4>📋 Produtos em Estoque</h4>
-  <table class="table table-bordered table-striped">
-    <thead class="table-light">
-      <tr>
-        <th>Produto</th>
-        <th>Quantidade em Estoque</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for produto, qtd in estoque_atual.items() %}
-        <tr>
-          <td>{{ produto }}</td>
-          <td>{{ qtd }}</td>
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
 
   <h4 class="mt-5">📆 Saídas por Produto e por Mês</h4>
   <table class="table table-bordered table-striped">
@@ -130,6 +110,27 @@
     </div>
   </div>
 </div>
+
+  <hr class="mt-5 mb-4">
+  <!--Relatório de Movimentações-->
+  <h3 class="mb-4">📊 Relatório de Movimentações - Valores ainda estão incorretos</h3>
+  <h4>📋 Produtos em Estoque</h4>
+  <table class="table table-bordered table-striped">
+    <thead class="table-light">
+      <tr>
+        <th>Produto</th>
+        <th>Quantidade em Estoque</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for produto, qtd in estoque_atual.items() %}
+        <tr>
+          <td>{{ produto }}</td>
+          <td>{{ qtd }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
 
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
