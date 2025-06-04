@@ -131,6 +131,25 @@
             <a href="{{ url_for('edit_compra', id=c.id) }}" class="btn btn-sm btn-primary">Editar</a>
             <a href="{{ url_for('delete_compra', id=c.id) }}" class="btn btn-sm btn-danger"
                onclick="return confirm('Deseja mesmo excluir este produto da lista de compras?');">Excluir</a>
+            <form action="{{ url_for('registrar_compra', id=c.id) }}" method="POST" style="display:inline;" onsubmit="return solicitarEstoqueMinimo(this, event);">
+              <input type="hidden" name="estoque_minimo">
+              <button type="submit" class="btn btn-sm btn-warning">Comprado!</button>
+            </form>
+            <script>
+              function solicitarEstoqueMinimo(form, event) {
+              event.preventDefault();
+              var valor = prompt("Informe o estoque mínimo:");
+              if (valor === null) return false;
+              valor = valor.trim();
+              if (!/^\d+$/.test(valor) || Number(valor) < 0) {
+                alert("Digite um valor numérico válido para o estoque mínimo.");
+                return false;
+              }
+              form.estoque_minimo.value = valor;
+              form.submit();
+              return false;
+              }
+            </script>
           </td>
         </tr>
         {% else %}

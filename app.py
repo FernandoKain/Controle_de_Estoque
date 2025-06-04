@@ -204,7 +204,7 @@ def update(id):
     produto.estoque_minimo = int(request.form['estoque_minimo'])  # você usa isso no form
     db.session.commit()
     flash('Produto atualizado com sucesso.', 'success')
-    return redirect(url_for('lista_compras', id=id))
+    return redirect(url_for('index', id=id))
 
 # ==================================================
 # Cadastrar categoria
@@ -1035,22 +1035,22 @@ def adicionar_compra():
     quantidade = int(request.form['quantidade'])
     preco = request.form['preco']
     setor_id = request.form['setor_id']
+    url = request.form['url'].strip()
+
     # Verifica se o campo setor_id foi enviado, se não, define como None
     if setor_id is None or setor_id == '':
         setor_id = None
-
-    url = request.form['url'].strip()
 
     # Verifica se já existe um produto com o mesmo nome (ignorando acentos e maiúsculas)
     compras = Compra.query.all()
     for c in compras:
         if normalizar_texto(c.nome) == nome_normalizado:
-            flash('Produto já cadastrado.', 'danger')
+            flash('Produto já cadastrado. Altere a quantidade ou utilize outro setor a receber', 'danger')
             return redirect(url_for('lista_compras'))
 
     # Se não existir, adiciona o novo produto
     compra = Compra(
-        nome=nome_normalizado,
+        nome=nome_original,
         categoria_id=categoria_id,
         quantidade=quantidade,
         preco=float(preco) if preco else None,
@@ -1098,6 +1098,48 @@ def delete_compra(id):
     flash('Produto removido da lista com sucesso.', 'success')
     return redirect(url_for('lista_compras'))
 
+@app.route('/registrar_compra/<int:id>', methods=['POST'])
+@login_required
+def registrar_compra(id):
+    compra = Compra.query.get_or_404(id)
+    
+    estoque_minimo = int(request.form['estoque_minimo']) if request.form['estoque_minimo'] else 0
+
+    # Verifica se o produto já existe no estoque
+    produto_existente = Produto.query.filter_by(nome=compra.nome, preco=compra.preco).first()
+    
+    if produto_existente:
+        # Se existir, atualiza a quantidade
+        produto_existente.quantidade += compra.quantidade
+        # Atualiza o estoque mínimo se necessário
+        if produto_existente.estoque_minimo < estoque_minimo:
+            produto_existente.estoque_minimo = estoque_minimo
+    else:
+        # Se não existir, cria um novo produto
+        novo_produto = Produto(
+            nome=compra.nome,
+            quantidade=compra.quantidade,
+            preco=compra.preco,
+            estoque_minimo=estoque_minimo,
+            categoria_id=compra.categoria_id
+        )
+        db.session.add(novo_produto)
+
+    # Registra a movimentação de entrada
+    #nova_movimentacao = Movimentacao(
+    #    produto_id=produto_existente.id if produto_existente else novo_produto.id,
+    #    tipo='entrada',
+    #    quantidade=compra.quantidade,
+    #    setor_id=compra.setor_id
+    #)
+    #db.session.add(nova_movimentacao)
+    
+    # Remove a compra da lista de compras
+    db.session.delete(compra)
+    
+    db.session.commit()
+    flash('Compra registrada com sucesso.', 'success')
+    return redirect(url_for('lista_compras'))
 
 # ==================================================
 # Execução da aplicação
