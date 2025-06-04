@@ -29,41 +29,62 @@
   <!-- Formulário de adicionar produto -->
   <div class="card p-4 mb-4">
     <h5 class="card-title">Adicionar Produto</h5>
-    <form action="{{ url_for('adicionar_compra') }}" method="POST" class="row g-3">
-      <div class="col-md-3">
-        <input type="text" name="nome" class="form-control" placeholder="Nome" required>
+    <div class="row">
+      <label class="form-label">Reutilizar produto já cadastrado:</label>
+      <select class="form-select" name="produto_id" id="produto_id">
+        <option value="">Selecione um produto já cadastrado</option>
+        {% for produto in produtos %}
+          <option 
+            value="{{ produto.id }}"
+            data-nome="{{ produto.nome }}"
+            data-categoria="{{ produto.categoria.id }}"
+            data-preco="{{ produto.preco }}"
+          >
+            {{ produto.nome }} - {{ produto.categoria.nome }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="row mt-3">
+      <label class="form-label">Ou adicionar um novo produto:</label>
+      <form action="{{ url_for('adicionar_compra') }}" method="POST" class="row">
+        <div class="col col-4">
+          <input type="text" name="nome" class="form-control" placeholder="Nome" required id="nome">
+        </div>
+        <div class="col">
+          <select name="categoria_id" class="form-select"  id="categoria_id">
+            <option value="">Categoria</option>
+            {% for cat in categorias %}
+              <option value="{{ cat.id }}">{{ cat.nome }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col">
+          <input type="number" name="quantidade" class="form-control" placeholder="Quantidade" required min="0">
+        </div>
+        <div class="col ">
+          <input type="number" name="preco" class="form-control" step="0.01" placeholder="Preço" min="0" id="preco">
+        </div>
       </div>
-      <div class="col-md-2">
-        <select name="categoria_id" class="form-select" required>
-          <option value="">Escolha a categoria</option>
-          {% for cat in categorias %}
-            <option value="{{ cat.id }}">{{ cat.nome }}</option>
-          {% endfor %}
-        </select>
-      </div>
-      <div class="col-md-2">
-        <input type="number" name="quantidade" class="form-control" placeholder="Quantidade" required min="0">
-      </div>
-      <div class="col-md-2">
-        <input type="number" name="preco" class="form-control" step="0.01" placeholder="Preço" min="0">
-      </div>
-      <div class="col-md-2">
-        <select class="form-select" name="setor_id">
-          <option value="">Setor que receberá</option>
-          {% for setor in setores %}
-            {% if setor.status %}
-            <option value="{{ setor.id }}">{{ setor.nome }}</option>
-            {% endif %}
-          {% endfor %}
-        </select>
-      </div>
-      <div class="col-md-3">
-        <input type="text" name="url" class="form-control" placeholder="URL">
-      </div>
-      <div class="col-md-1 d-grid">
-        <button type="submit" class="btn btn-success">Adicionar</button>
-      </div>
-    </form>
+      <div class="row p-1">
+        <div class="col">
+          <select class="form-select" name="setor_id">
+            <option value="">Setor a receber</option>
+            {% for setor in setores %}
+              {% if setor.status %}
+              <option value="{{ setor.id }}">{{ setor.nome }}</option>
+              {% endif %}
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col col-6" >
+          <input type="text" name="url" class="form-control" placeholder="URL">
+        </div>
+        <div class="col">
+          <button type="submit" class="btn btn-success">Adicionar</button>
+        </div>
+      </form>
+    </div>
   </div>
   <!-- Tabela de produtos a comprar -->
   <div class="table-responsive">
@@ -89,7 +110,15 @@
           <td>{{ c.quantidade }}</td>
           <td>{% if c.preco %}R$ {{ "%.2f"|format(c.preco) }}{% else %} - {% endif %}</td>
           <td>{% if c.setor %}{{ c.setor.nome }}{% else %} - {% endif %}</td>
-          <td><a href="{{ c.url }}" target="_blank">{{ c.url }}</a></td>
+          <td>
+              {% if c.url %}
+                <a href="{{ c.url }}" target="_blank">
+                  {{ c.url[:30] }}{% if c.url|length > 30 %}...{% endif %}
+                </a>
+              {% else %}
+                -
+              {% endif %}
+          </td>
           <td>
             <a href="{{ url_for('edit_compra', id=c.id) }}" class="btn btn-sm btn-primary">Editar</a>
             <a href="{{ url_for('delete_compra', id=c.id) }}" class="btn btn-sm btn-danger"
@@ -106,4 +135,16 @@
   </div>
 
 </div>
+
+<!-- Script para preencher os campos do formulário com os dados do produto selecionado -->
+<script>
+  document.getElementById('produto_id').addEventListener('change', function() {
+    var selected = this.options[this.selectedIndex];
+    document.getElementById('nome').value = selected.getAttribute('data-nome') || '';
+    document.getElementById('categoria_id').value = selected.getAttribute('data-categoria') || '';
+    document.getElementById('preco').value = selected.getAttribute('data-preco') || '';
+  });
+</script>
 {% endblock %}
+
+

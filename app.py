@@ -120,12 +120,19 @@ def index():
 @app.route('/lista_compras')
 @login_required
 def lista_compras():
+    busca = request.args.get('busca')
     categorias = Categoria.query.all()
     setores = Setor.query.all()
-    compras = Compra.query.all()
-    return render_template('lista_compras.html', categorias=categorias, setores=setores, compras=compras)
+    produtos = Produto.query.all()
+    if busca:
+        compras = Compra.query.join(Categoria).filter(
+            Compra.nome.ilike(f'%{busca}%') |
+            Categoria.nome.ilike(f'%{busca}%')
+        ).all()
+    else:
+        compras = Compra.query.all()
 
-
+    return render_template('lista_compras.html', categorias=categorias, setores=setores, compras=compras, produtos=produtos)
 
 # ==================================================
 # Função para normalizar texto (remover acentos e converter para minúsculas) para ajudar na rota de adicionar produtos
@@ -1052,6 +1059,7 @@ def adicionar_compra():
     )
     db.session.add(compra)
     db.session.commit()
+    print("Nome normalizado = " + compra.nome + " | Categoria ID = " + str(compra.categoria_id) + " | Quantidade = " + str(compra.quantidade) + " | Preço = " + str(compra.preco) + " | Setor ID = " + str(compra.setor_id) + " | URL = " + compra.url)
     flash('Produto adicionado com sucesso.', 'success')
     return redirect(url_for('lista_compras'))
 
