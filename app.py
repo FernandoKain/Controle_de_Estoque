@@ -1044,8 +1044,8 @@ def adicionar_compra():
     # Verifica se já existe um produto com o mesmo nome (ignorando acentos e maiúsculas)
     compras = Compra.query.all()
     for c in compras:
-        if normalizar_texto(c.nome) == nome_normalizado:
-            flash('Produto já cadastrado. Altere a quantidade ou utilize outro setor a receber', 'danger')
+        if normalizar_texto(c.nome) == nome_normalizado and c.preco == float(preco):
+            flash('Produto já cadastrado.', 'danger')
             return redirect(url_for('lista_compras'))
 
     # Se não existir, adiciona o novo produto
