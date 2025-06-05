@@ -7,6 +7,8 @@ from flask_login import LoginManager, login_user, login_required, logout_user, c
 # SQLAlchemy adicional
 from sqlalchemy import or_
 from sqlalchemy import func, case, desc, and_
+from sqlalchemy.orm import joinedload
+
 
 # Segurança
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -118,12 +120,19 @@ def index():
 @app.route('/lista_compras')
 @login_required
 def lista_compras():
+    busca = request.args.get('busca')
     categorias = Categoria.query.all()
     setores = Setor.query.all()
-    compras = Compra.query.all()
-    return render_template('lista_compras.html', categorias=categorias, setores=setores, compras=compras)
+    produtos = Produto.query.all()
+    if busca:
+        compras = Compra.query.join(Categoria).filter(
+            Compra.nome.ilike(f'%{busca}%') |
+            Categoria.nome.ilike(f'%{busca}%')
+        ).all()
+    else:
+        compras = Compra.query.all()
 
-
+    return render_template('lista_compras.html', categorias=categorias, setores=setores, compras=compras, produtos=produtos)
 
 # ==================================================
 # Função para normalizar texto (remover acentos e converter para minúsculas) para ajudar na rota de adicionar produtos
@@ -867,8 +876,10 @@ def graficos():
     produto_id = request.args.get('produto_id')
     setor_id = request.args.get('setor_id')
 
+    # Inicia a query base para buscar movimentações
     query = Movimentacao.query
 
+    # Aplica filtros de data, se fornecidos
     if data_inicio:
         data_inicio = datetime.strptime(data_inicio, '%Y-%m-%d')
         query = query.filter(Movimentacao.data >= data_inicio)
@@ -877,22 +888,24 @@ def graficos():
         data_fim = datetime.strptime(data_fim, '%Y-%m-%d')
         query = query.filter(Movimentacao.data <= data_fim)
 
+    # Aplica filtros por produto e setor, se fornecidos
     if produto_id:
         query = query.filter(Movimentacao.produto_id == int(produto_id))
 
     if setor_id:
         query = query.filter(Movimentacao.setor_id == int(setor_id))
 
+    # Executa a query com os filtros aplicados
     movimentacoes_filtradas = query.all()
 
-    # Saídas por produto
+    # Gráfico 1: "Saídas por produto"
     saidas_produto = db.session.query(
         Produto.nome,
         func.sum(Movimentacao.quantidade)
     ).join(Produto).filter(
         Movimentacao.tipo == 'saida'
     )
-
+    # Aplica os mesmos filtros às saídas por produto
     if produto_id:
         saidas_produto = saidas_produto.filter(Movimentacao.produto_id == int(produto_id))
     if setor_id:
@@ -902,12 +915,15 @@ def graficos():
     if data_fim:
         saidas_produto = saidas_produto.filter(Movimentacao.data <= data_fim)
 
+    # Agrupa os dados por nome do produto
     saidas_produto = saidas_produto.group_by(Produto.nome).all()
 
+    # Extrai nomes e quantidades para o gráfico
     nomes_produtos = [p[0] for p in saidas_produto]
     quantidades_produtos = [p[1] for p in saidas_produto]
 
-    # Saídas por setor
+
+    # Gráfico 2: "Saídas por setor"
     saidas_setor = db.session.query(
         Setor.nome,
         func.sum(Movimentacao.quantidade)
@@ -915,6 +931,7 @@ def graficos():
         Movimentacao.tipo == 'saida'
     )
 
+    # Aplica filtros às saídas por setor
     if produto_id:
         saidas_setor = saidas_setor.filter(Movimentacao.produto_id == int(produto_id))
     if setor_id:
@@ -924,34 +941,39 @@ def graficos():
     if data_fim:
         saidas_setor = saidas_setor.filter(Movimentacao.data <= data_fim)
 
+    # Agrupa os dados por nome do setor
     saidas_setor = saidas_setor.group_by(Setor.nome).all()
 
+    # Extrai nomes e quantidades para o gráfico
     nomes_setores = [s[0] for s in saidas_setor]
     quantidades_setores = [s[1] for s in saidas_setor]
 
-    # Gráfico mensal
+    # Gráfico 3: Movimentações mensais (entrada/saída)
     movimentacoes_mensais = {}
+    
+    # Agrupa as movimentações por mês e tipo (entrada/saída)
     for mov in movimentacoes_filtradas:
         chave = mov.data.strftime('%Y-%m')
         if chave not in movimentacoes_mensais:
             movimentacoes_mensais[chave] = {'entrada': 0, 'saida': 0}
         movimentacoes_mensais[chave][mov.tipo] += mov.quantidade
 
+    # Organiza os dados por ordem cronológica
     meses = sorted(movimentacoes_mensais.keys())
     entradas_mes = [movimentacoes_mensais[m]['entrada'] for m in meses]
     saidas_mes = [movimentacoes_mensais[m]['saida'] for m in meses]
 
-    # Saldo atual por produto (Entradas - Saídas)
+    # Gráfico 4: Saldo atual por produto (entradas - saídas)
     saldos = db.session.query(
         Produto.nome,
         func.sum(
             case(
                 (Movimentacao.tipo == 'entrada', Movimentacao.quantidade),
-                (Movimentacao.tipo == 'saida', -Movimentacao.quantidade),
-                else_=0
-            )
+                (Movimentacao.tipo == 'saida', -Movimentacao.quantidade)
+            , else_=0)
         )
     ).join(Produto).group_by(Produto.nome).all()
+
     
     # 1. Estoque atual por produto
     produtos = Produto.query.all()
@@ -963,7 +985,20 @@ def graficos():
         estoque_atual[produto.nome] = saldo
 
     # 2. Saídas por produto e por mês
-    movimentacoes_saida = db.session.query(Movimentacao).filter_by(tipo='saida').all()
+    movimentacoes_saida_query = db.session.query(Movimentacao).filter(Movimentacao.tipo == 'saida')
+
+    if produto_id:
+        movimentacoes_saida_query = movimentacoes_saida_query.filter(Movimentacao.produto_id == int(produto_id))
+    if setor_id:
+        movimentacoes_saida_query = movimentacoes_saida_query.filter(Movimentacao.setor_id == int(setor_id))
+    if data_inicio:
+        movimentacoes_saida_query = movimentacoes_saida_query.filter(Movimentacao.data >= data_inicio)
+    if data_fim:
+        movimentacoes_saida_query = movimentacoes_saida_query.filter(Movimentacao.data <= data_fim)
+
+    movimentacoes_saida = movimentacoes_saida_query.all()
+
+    # Agrupa as saídas por produto e por mês
     saidas_por_produto = {}
     meses_ordenados_set = set()
 
@@ -1001,7 +1036,9 @@ def graficos():
         todos_setores=Setor.query.all()
     )
 
-
+# ==================================================
+# Lista de compras
+# ==================================================
 @app.route('/adicionar_compra', methods=['POST'])
 @login_required
 def adicionar_compra():
@@ -1035,6 +1072,7 @@ def adicionar_compra():
     )
     db.session.add(compra)
     db.session.commit()
+    print("Nome normalizado = " + compra.nome + " | Categoria ID = " + str(compra.categoria_id) + " | Quantidade = " + str(compra.quantidade) + " | Preço = " + str(compra.preco) + " | Setor ID = " + str(compra.setor_id) + " | URL = " + compra.url)
     flash('Produto adicionado com sucesso.', 'success')
     return redirect(url_for('lista_compras'))
 
