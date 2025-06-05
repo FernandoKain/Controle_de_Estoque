@@ -52,7 +52,9 @@
           <li class="list-group-item d-flex justify-content-between align-items-center">
             {{ setor.nome }}
             <div class="btn-group">
-              <a href="{{ url_for('editar_setor', id=setor.id) }}" class="btn btn-sm btn-primary">Editar</a>
+              <form method="GET" action="{{ url_for('editar_setor', id=setor.id) }}" style="display:inline;">
+                <button type="submit" class="btn btn-sm btn-primary">Editar</button>
+              </form>
               <form method="POST" action="{{ url_for('desabilitar_setor', id=setor.id) }}" onsubmit="return confirm('Tem certeza que deseja desabilitar este Setor? (Essa ação não pode ser desfeita)')">
                 <button type="submit" class="btn btn-sm btn-danger">Desabilitar</button>
               </form>

@@ -20,30 +20,36 @@
 
 
   <!-- Formulário de busca -->
-  <form class="input-group mb-4" method="GET" action="{{ url_for('lista_compras') }}">
-    <input type="text" name="busca" class="form-control" placeholder="Buscar por nome ou categoria">
-    <button class="btn btn-outline-primary" type="submit">Buscar</button>
-    <a href="{{ url_for('lista_compras') }}" class="btn btn-outline-secondary">Limpar</a>
-  </form>
+  <div class="card p-2 mb-2">
+    <form method="GET" action="{{ url_for('lista_compras') }}">
+      <div class="input-group mb-3">
+        <input type="text" name="busca" class="form-control" placeholder="Buscar por nome ou categoria">
+        <button class="btn btn-outline-primary" type="submit">Buscar</button>
+        <button type="button" class="btn btn-outline-secondary" onclick="window.location.href='{{ url_for('lista_compras') }}'">Limpar</button>
+      </div>
+    </form>
+  </div>
 
   <!-- Formulário de adicionar produto -->
   <div class="card p-4 mb-4">
     <h5 class="card-title">Adicionar Produto</h5>
-    <div class="row">
+    <div class="row mt-3">
       <label class="form-label">Reutilizar produto já cadastrado:</label>
-      <select class="form-select" name="produto_id" id="produto_id">
-        <option value="">Selecione um produto já cadastrado</option>
-        {% for produto in produtos %}
-          <option 
-            value="{{ produto.id }}"
-            data-nome="{{ produto.nome }}"
-            data-categoria="{{ produto.categoria.id }}"
-            data-preco="{{ produto.preco }}"
-          >
-            {{ produto.nome }} - {{ produto.categoria.nome }}
-          </option>
-        {% endfor %}
-      </select>
+      <div class="col col-6">
+        <select class="form-select" name="produto_id" id="produto_id">
+          <option value="">Selecione um produto já cadastrado</option>
+          {% for produto in produtos %}
+            <option 
+              value="{{ produto.id }}"
+              data-nome="{{ produto.nome }}"
+              data-categoria="{{ produto.categoria.id }}"
+              data-preco="{{ produto.preco }}"
+            >
+              {{ produto.nome }} - {{ produto.categoria.nome }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
     </div>
     <p></p>
 
@@ -125,6 +131,25 @@
             <a href="{{ url_for('edit_compra', id=c.id) }}" class="btn btn-sm btn-primary">Editar</a>
             <a href="{{ url_for('delete_compra', id=c.id) }}" class="btn btn-sm btn-danger"
                onclick="return confirm('Deseja mesmo excluir este produto da lista de compras?');">Excluir</a>
+            <form action="{{ url_for('registrar_compra', id=c.id) }}" method="POST" style="display:inline;" onsubmit="return solicitarEstoqueMinimo(this, event);">
+              <input type="hidden" name="estoque_minimo">
+              <button type="submit" class="btn btn-sm btn-warning">Comprado!</button>
+            </form>
+            <script>
+              function solicitarEstoqueMinimo(form, event) {
+              event.preventDefault();
+              var valor = prompt("Informe o estoque mínimo:");
+              if (valor === null) return false;
+              valor = valor.trim();
+              if (!/^\d+$/.test(valor) || Number(valor) < 0) {
+                alert("Digite um valor numérico válido para o estoque mínimo.");
+                return false;
+              }
+              form.estoque_minimo.value = valor;
+              form.submit();
+              return false;
+              }
+            </script>
           </td>
         </tr>
         {% else %}

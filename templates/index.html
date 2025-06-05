@@ -19,11 +19,15 @@
   {% endwith %}
 
   <!-- Formulário de busca -->
-  <form class="input-group mb-4" method="GET" action="{{ url_for('index') }}">
-    <input type="text" name="busca" class="form-control" placeholder="Buscar por nome ou categoria">
-    <button class="btn btn-outline-primary" type="submit">Buscar</button>
-    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">Limpar</a>
-  </form>
+  <div class="card p-2 mb-2">
+    <form method="GET" action="{{ url_for('index') }}">
+      <div class="input-group mb-3">
+        <input type="text" name="busca" class="form-control" placeholder="Buscar por nome ou categoria">
+        <button class="btn btn-outline-primary" type="submit">Buscar</button>
+        <button type="button" class="btn btn-outline-secondary" onclick="window.location.href='{{ url_for('index') }}'">Limpar</button>
+      </div>
+    </form>
+  </div>
 
   <!-- Formulário de adicionar produto -->
   <div class="card p-4 mb-4">
