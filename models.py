@@ -70,7 +70,7 @@ class Compra(db.Model):
     nome = db.Column(db.String(100), nullable=False)
     categoria_id = db.Column(db.Integer, db.ForeignKey('categoria.id'), nullable=False)
     quantidade = db.Column(db.Integer, nullable=False)
-    preco = db.Column(db.Float, nullable=True)
+    preco = db.Column(db.Float, nullable=False)
     setor_id = db.Column(db.Integer, db.ForeignKey('setores.id'), nullable=True)
     url = db.Column(db.String(500), nullable=True)
 

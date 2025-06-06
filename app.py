@@ -302,10 +302,12 @@ def excluir_movimentacao(id):
     produto = Produto.query.get(movimentacao.produto_id)
 
     # Reverter o estoque
-    if movimentacao.tipo == 'entrada':
+    if movimentacao.tipo == 'Entrada':
         produto.quantidade -= movimentacao.quantidade
-    elif movimentacao.tipo == 'saida':
+    elif movimentacao.tipo == 'Saida':
         produto.quantidade += movimentacao.quantidade
+    elif movimentacao.tipo == 'Compra':
+        produto.quantidade -= movimentacao.quantidade
 
     db.session.delete(movimentacao)
     db.session.commit()
@@ -340,9 +342,9 @@ def cadastrar_setor():
         if nome:
             novo_setor = Setor(nome=nome, status=True)
             # Verifica se já existe um setor com o mesmo nome
-            setor_existente = Setor.query.filter_by(nome=nome).first()
+            setor_existente = Setor.query.filter_by(nome=nome, status=True).first()
             if setor_existente:
-                flash('Já existe um setor com esse nome.', 'warning')
+                flash('Já existe um  ativo com esse nome.', 'warning')
                 return redirect(url_for('cadastrar_setor'))
             
             # Adiciona o novo setor ao banco de dados
@@ -770,7 +772,7 @@ def importar_csv_movimentacoes():
             
             if setor is None and setor_nome != "":
                 # Se o setor não for encontrado, criá-lo
-                setor = Setor(nome=setor_nome, status=True)
+                setor = Setor(nome=setor_nome, status=False)
                 db.session.add(setor)
                 setor = Setor.query.filter_by(nome=setor_nome).first()
 
@@ -864,6 +866,100 @@ def exportar_csv_setores():
             'Content-Disposition': 'attachment; filename=setores_exportados.csv'
         }
     )
+
+# ==================================================
+# Exportar CSV Lista de Compras
+# ==================================================
+@app.route('/exportar_csv_compras', methods=['GET'])
+@login_required
+def exportar_csv_compras():
+    # Reutiliza os mesmos filtros
+    busca = request.args.get('busca')
+
+    if busca:
+        compras = Compra.query.join(Categoria).filter(
+            Compra.nome.ilike(f'%{busca}%') |
+            Categoria.nome.ilike(f'%{busca}%')
+        ).all()
+    else:
+        compras = Compra.query.all()
+
+    # Geração do CSV
+    si = StringIO()
+    writer = csv.writer(si)
+    # Cabeçalho corrigido
+    writer.writerow(['nome', 'categoria', 'quantidade', 'preco', 'url'])
+
+    for compra in compras:
+        writer.writerow([
+            compra.nome,
+            compra.categoria.nome if compra.categoria else '',
+            compra.quantidade,
+            f'{compra.preco:.2f}' if compra.preco is not None else '0.00',
+            compra.url if compra.url else ''
+        ])
+
+    output = make_response(si.getvalue())
+    output.headers["Content-Disposition"] = "attachment; filename=produtos_lista_compras.csv"
+    output.headers["Content-type"] = "text/csv; charset=utf-8"
+    return output
+
+@app.route('/importar_csv_compras', methods=['POST'])
+@login_required
+def importar_csv_compras():
+    if 'arquivo_csv' not in request.files:
+        flash('Nenhum arquivo enviado.', 'danger')
+        return redirect(url_for('lista_compras'))
+
+    arquivo = request.files['arquivo_csv']
+
+    if not arquivo.filename.endswith('.csv'):
+        flash('Formato inválido. Envie um arquivo .csv', 'danger')
+        return redirect(url_for('lista_compras'))
+
+    try:
+        stream = TextIOWrapper(arquivo, encoding='utf-8')
+        reader = csv.DictReader(stream)
+
+        for linha in reader:
+            nome = linha['nome'].strip()
+            categoria_nome = linha.get('categoria', '').strip()
+            quantidade = int(linha['quantidade'])
+            preco = float(linha['preco'])
+            url = linha.get('url', '').strip()
+
+            if not nome or not categoria_nome:
+                flash('Nome ou categoria ausente em alguma linha.', 'danger')
+                continue
+
+            categoria = Categoria.query.filter_by(nome=categoria_nome).first()
+            if not categoria:
+                categoria = Categoria(nome=categoria_nome)
+                db.session.add(categoria)
+                db.session.commit()
+                categoria = Categoria.query.filter_by(nome=categoria_nome).first()
+
+            # Verifica se já existe compra com mesmo nome, categoria e preço
+            compra_existente = Compra.query.filter_by(nome=nome, categoria_id=categoria.id, preco=preco).first()
+            if compra_existente:
+                # Atualiza a compra existente
+                compra_existente.quantidade += quantidade
+            else:
+                nova_compra = Compra(
+                    nome=nome,
+                    categoria_id=categoria.id,
+                    quantidade=quantidade,
+                    preco=preco,
+                    url=url
+                )
+                db.session.add(nova_compra)
+
+        db.session.commit()
+        flash('Compras importadas com sucesso!', 'success')
+    except Exception as e:
+        flash(f'Erro ao importar arquivo: {str(e)}', 'danger')
+
+    return redirect(url_for('lista_compras'))
 
 
 # ==================================================
@@ -1049,7 +1145,7 @@ def adicionar_compra():
     nome_normalizado = normalizar_texto(nome_original)
     categoria_id = int(request.form['categoria_id'])
     quantidade = int(request.form['quantidade'])
-    preco = request.form['preco']
+    preco = request.form['preco'] if request.form['preco'] else 0.0
     setor_id = request.form['setor_id']
     url = request.form['url'].strip()
 
@@ -1069,7 +1165,7 @@ def adicionar_compra():
         nome=nome_original,
         categoria_id=categoria_id,
         quantidade=quantidade,
-        preco=float(preco) if preco else None,
+        preco=float(preco) if preco else 0.0,
         setor_id=int(setor_id) if setor_id else None,
         url=url
     )
@@ -1143,12 +1239,10 @@ def registrar_compra(id):
         db.session.commit()
         novo_produto = Produto.query.filter_by(nome=compra.nome, preco=compra.preco).first()
 
-    db.session.commit()
-    produto_salvar = Produto.query.filter_by(nome=compra.nome, preco=compra.preco).first() if not produto_existente else produto_existente
     # Registra a movimentação de entrada
     nova_movimentacao = Movimentacao(
         produto_id=produto_existente.id if produto_existente else novo_produto.id,
-        tipo='entrada',
+        tipo='Compra',
         quantidade=compra.quantidade,
         setor_id=compra.setor_id
     )

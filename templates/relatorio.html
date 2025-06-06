@@ -52,8 +52,8 @@
           {% endif %}
         </td>
         <td>
-          <form action="{{ url_for('excluir_movimentacao', id=mov.id) }}" method="POST" onsubmit="return confirm('Deseja realmente excluir esta movimentação?');">
-            <button type="submit" class="btn btn-danger btn-sm">Excluir</button>
+          <form action="{{ url_for('excluir_movimentacao', id=mov.id) }}" method="POST" onsubmit="return confirm('{% if mov.tipo == "Compra" %}Deseja desfazer a compra? Isso só retirará a quantidade do produto do estoque, mas não recuperaá o produto na Lista de Compras{% else %}Deseja realmente desfazer esta movimentação?{% endif %}');">
+            <button type="submit" class="btn btn-danger btn-sm">Desfazer</button>
           </form>
         </td>
       </tr>

@@ -60,7 +60,7 @@
           <input type="text" name="nome" class="form-control" placeholder="Nome" required id="nome">
         </div>
         <div class="col">
-          <select name="categoria_id" class="form-select"  id="categoria_id">
+          <select name="categoria_id" class="form-select"  id="categoria_id" required>
             <option value="">Categoria</option>
             {% for cat in categorias %}
               <option value="{{ cat.id }}">{{ cat.nome }}</option>
@@ -106,7 +106,14 @@
           <th>Preço</th>
           <th>Setor receberá</th>
           <th>URL</th>
-          <th>Ações</th>
+          <th style="width: 240px; min-width: 200px; max-width: 260px;">
+            Ações
+            <form id="importar-csv-form" action="{{ url_for('importar_csv_compras') }}" method="POST" enctype="multipart/form-data" style="display:inline;">
+              <input type="file" name="arquivo_csv" id="arquivo_csv" accept=".csv" style="display:none;" onchange="document.getElementById('importar-csv-form').submit();">
+              <button type="button" class="btn btn-outline-success float-end py-1 px-2" style="font-size:0.95em; line-height:1;" onclick="document.getElementById('arquivo_csv').click();" title="Importar lista">⬇️</button>
+            </form>
+            <button type="button" class="btn btn-outline-success float-end py-1 px-2" style="font-size:0.95em; line-height:1;" onclick="window.location.href='{{ url_for('exportar_csv_compras') }}'" title="Exportar lista">📤</button>
+          </th>
         </tr>
       </thead>
       <tbody>
@@ -121,13 +128,13 @@
           <td>
               {% if c.url %}
                 <a href="{{ c.url }}" target="_blank">
-                  {{ c.url[:30] }}{% if c.url|length > 30 %}...{% endif %}
+                  {{ c.url[:50] }}{% if c.url|length > 50 %}...{% endif %}
                 </a>
               {% else %}
                 -
               {% endif %}
           </td>
-          <td>
+          <td style="width: 240px; min-width: 200px; max-width: 260px;">
             <a href="{{ url_for('edit_compra', id=c.id) }}" class="btn btn-sm btn-primary">Editar</a>
             <a href="{{ url_for('delete_compra', id=c.id) }}" class="btn btn-sm btn-danger"
                onclick="return confirm('Deseja mesmo excluir este produto da lista de compras?');">Excluir</a>
