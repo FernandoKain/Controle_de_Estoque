@@ -161,9 +161,10 @@ def adicionar():
     # Verifica se já existe um produto com o mesmo nome (ignorando acentos e maiúsculas)
     produtos = Produto.query.all()
     for p in produtos:
-        if normalizar_texto(p.nome) == nome_normalizado:
+        if normalizar_texto(p.nome) == nome_normalizado and p.preco == preco:
             flash('Produto já cadastrado. Utilize "Movimentar" caso queira dar entrada no produto.', 'danger')
             return redirect(url_for('index'))
+        
 
     # Se não existir, adiciona o novo produto
     produto = Produto(
@@ -1139,15 +1140,19 @@ def registrar_compra(id):
             categoria_id=compra.categoria_id
         )
         db.session.add(novo_produto)
+        db.session.commit()
+        novo_produto = Produto.query.filter_by(nome=compra.nome, preco=compra.preco).first()
 
+    db.session.commit()
+    produto_salvar = Produto.query.filter_by(nome=compra.nome, preco=compra.preco).first() if not produto_existente else produto_existente
     # Registra a movimentação de entrada
-    #nova_movimentacao = Movimentacao(
-    #    produto_id=produto_existente.id if produto_existente else novo_produto.id,
-    #    tipo='entrada',
-    #    quantidade=compra.quantidade,
-    #    setor_id=compra.setor_id
-    #)
-    #db.session.add(nova_movimentacao)
+    nova_movimentacao = Movimentacao(
+        produto_id=produto_existente.id if produto_existente else novo_produto.id,
+        tipo='entrada',
+        quantidade=compra.quantidade,
+        setor_id=compra.setor_id
+    )
+    db.session.add(nova_movimentacao)
     
     # Remove a compra da lista de compras
     db.session.delete(compra)
